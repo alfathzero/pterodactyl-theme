@@ -74,6 +74,13 @@
 .spot-add input:focus { border-color: #1db954; }
 .spot-add .u { flex: 2; min-width: 0; }
 .spot-add .nm { flex: 1; min-width: 0; }
+.spot-add .nm.full { flex: 1; width: 100%; }
+.spot-add .file {
+  border: none; border-radius: 9px; background: rgba(29, 185, 84, 0.22);
+  color: #4ade80; cursor: pointer; padding: 0 10px; display: flex; align-items: center;
+}
+.spot-add .file svg { width: 18px; height: 18px; }
+.spot-add .file:hover { background: rgba(29, 185, 84, 0.4); }
 .spot-add button {
   border: none; border-radius: 9px; background: #1db954; color: #04140a;
   font-weight: 800; font-size: 12px; padding: 0 12px; cursor: pointer;
