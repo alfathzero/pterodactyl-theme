@@ -5,6 +5,7 @@
 @section('assets')
     <link rel="stylesheet" href="/assets/custom-island.css?v=7">
     <link rel="stylesheet" href="/assets/custom-anim.css?v=11">
+    <link rel="stylesheet" href="/assets/custom-orb.css?v=1">
 @endsection
 
 @section('container')
@@ -141,4 +142,5 @@
     @parent
     <script src="/assets/custom-island.js?v=7"></script>
     <script src="/assets/custom-stats.js?v=1"></script>
+    <script src="/assets/custom-orb.js?v=1"></script>
 @endsection
