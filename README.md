@@ -12,6 +12,7 @@ Dibuat buat **alfa-marketdua-officialss.alfamarket2.my.id** — bebas dipakai ul
 | 🏝 Dynamic Island | Pil melayang ala iPhone: jam live WIB (`Asia/Jakarta`) + cuaca real-time (Open-Meteo, koordinat Bekasi Selatan). Bisa digeser kanan-kiri (posisi keingat), usap ke atas buat sembunyi, usap dari tepi atas / tap handle buat manggil |
 | 🖥 Dashboard | Daftar server jadi glass card, avatar icon gradient ungu, server ON glow hijau napas + bar status pulse, di HP tampil detail IP, CPU%, RAM, Disk per server |
 | 📊 Console | Kotak stats (Address/Uptime/CPU/Memory/Disk/Network) jadi glowing glass + **bar progress live** warna ijo→kuning→merah + grafik blok ikut ngaca |
+| 🎧 Orb Spotify-style | Tombol melayang pojok kanan bawah (logo Spotify, muter + glow pas main). Tap: panel player — play/pause, stop, next/prev, bar progress bisa di-seek, nama + link lagu, playlist (tambah/hapus/pilih, keingat di localStorage) |
 | 📁 Files & halaman lain | Background gradient gelap, nav glass, tombol membulat + hover lift, baris file ngaca halus, animasi masuk berjenjang, highlight table |
 
 Semua animasi otomatis nonaktif kalau OS pakai `prefers-reduced-motion`.
