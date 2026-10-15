@@ -1,0 +1,52 @@
+/* Dynamic Island for server console */
+#dyn-island {
+  position: fixed; top: calc(10px + env(safe-area-inset-top)); left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(14px);
+  color: #fff;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.55);
+  font-family: system-ui, -apple-system, sans-serif;
+  cursor: grab; user-select: none; -webkit-user-select: none;
+  touch-action: pan-y;
+  transition: width 0.3s ease, border-radius 0.3s ease, transform 0.35s ease;
+  width: 252px; overflow: hidden;
+}
+#dyn-island.dragging { cursor: grabbing; transition: none; }
+/* mini handle, visible only when island hidden */
+#dyn-handle {
+  position: fixed; top: calc(6px + env(safe-area-inset-top)); left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  width: 74px; height: 24px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  color: rgba(255,255,255,0.85);
+  font-size: 13px; line-height: 22px; text-align: center;
+  cursor: pointer; user-select: none; -webkit-user-select: none;
+  display: none;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+}
+#dyn-handle.show { display: block; animation: dynHandleIn 0.3s ease; }
+@keyframes dynHandleIn { from { opacity: 0; transform: translateX(-50%) translateY(-8px); } }
+#dyn-island.expanded { width: min(360px, 94vw); border-radius: 26px; }
+.dyn-collapsed { display: flex; align-items: center; gap: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.dyn-dot { width: 10px; height: 10px; border-radius: 9999px; background: #6b7280; flex: none; box-shadow: 0 0 10px currentColor; }
+.dyn-dot.on { background: #22c55e; color: #22c55e; animation: dynPulse 1.6s ease-in-out infinite; }
+.dyn-dot.off { background: #ef4444; color: #ef4444; }
+.dyn-dot.mid { background: #f59e0b; color: #f59e0b; animation: dynPulse 0.9s ease-in-out infinite; }
+@keyframes dynPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
+.dyn-name { overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+.dyn-time { font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: 0.04em; }
+.dyn-state { margin-left: auto; font-size: 11px; opacity: 0.75; font-weight: 500; }
+.dyn-detail { display: none; padding: 4px 18px 16px; }
+#dyn-island.expanded .dyn-detail { display: block; }
+.dyn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-top: 10px; font-size: 12px; }
+.dyn-grid .k { opacity: 0.55; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+.dyn-grid .v { font-weight: 700; font-size: 13px; }
+.dyn-hint { text-align: center; font-size: 10px; opacity: 0.4; margin-top: 10px; }
