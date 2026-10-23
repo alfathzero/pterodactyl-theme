@@ -1,0 +1,65 @@
+/* Custom 3D login theme - no rebuild needed */
+body.bg-neutral-900 {
+  background: radial-gradient(1200px 800px at 20% 10%, #1e3a8a 0%, transparent 60%),
+    radial-gradient(1000px 700px at 85% 20%, #6d28d9 0%, transparent 55%),
+    radial-gradient(900px 900px at 50% 100%, #0e7490 0%, transparent 60%),
+    #0a0a0f !important;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+#bg3d {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+#app {
+  position: relative;
+  z-index: 1;
+  perspective: 1400px;
+}
+/* tilt target */
+#app form > div {
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.15s ease-out, box-shadow 0.3s ease;
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55), 0 0 60px rgba(109, 40, 217, 0.25) !important;
+}
+/* floating orbs */
+.orb {
+  position: fixed;
+  border-radius: 9999px;
+  filter: blur(70px);
+  opacity: 0.5;
+  z-index: 0;
+  pointer-events: none;
+  animation: floatOrb 12s ease-in-out infinite alternate;
+}
+.orb-1 { width: 420px; height: 420px; background: #3b82f6; top: -100px; left: -100px; }
+.orb-2 { width: 360px; height: 360px; background: #a855f7; bottom: -80px; right: -60px; animation-delay: -4s; }
+.orb-3 { width: 260px; height: 260px; background: #22d3ee; top: 40%; left: 60%; animation-delay: -8s; opacity: 0.35; }
+@keyframes floatOrb {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(60px, -50px, 80px) scale(1.15); }
+}
+/* title glow + logo float */
+#app h2 {
+  text-shadow: 0 0 24px rgba(168, 85, 247, 0.8), 0 2px 10px rgba(0,0,0,0.6);
+  animation: titleFloat 5s ease-in-out infinite;
+}
+#app img {
+  animation: logoFloat 6s ease-in-out infinite;
+  filter: drop-shadow(0 12px 24px rgba(0,0,0,0.5));
+}
+@keyframes titleFloat { 0%,100% { transform: translateZ(30px); } 50% { transform: translateZ(60px) translateY(-4px); } }
+@keyframes logoFloat { 0%,100% { transform: translateY(0) rotateY(-8deg); } 50% { transform: translateY(-10px) rotateY(8deg); } }
+/* button 3d */
+#app button[type="submit"] {
+  transform: translateZ(40px);
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+#app button[type="submit"]:hover { transform: translateZ(55px) scale(1.03); }

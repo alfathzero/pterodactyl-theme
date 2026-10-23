@@ -1,0 +1,317 @@
+/* Animasi card & table panel (selector sesuai DOM React Pterodactyl) */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-18px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.92); }
+  70% { transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes sweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* kotak2 grid (Address/Uptime/CPU/Memory/Disk/Net + power buttons) */
+#app [class*="grid-cols"] > div,
+#app [class*="grid-cols"] > button {
+  animation: popIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+#app [class*="grid-cols"] > :nth-child(1) { animation-delay: 0.04s; }
+#app [class*="grid-cols"] > :nth-child(2) { animation-delay: 0.1s; }
+#app [class*="grid-cols"] > :nth-child(3) { animation-delay: 0.16s; }
+#app [class*="grid-cols"] > :nth-child(4) { animation-delay: 0.22s; }
+#app [class*="grid-cols"] > :nth-child(5) { animation-delay: 0.28s; }
+#app [class*="grid-cols"] > :nth-child(6) { animation-delay: 0.34s; }
+#app [class*="grid-cols"] > :nth-child(7) { animation-delay: 0.4s; }
+#app [class*="grid-cols"] > :nth-child(n+8) { animation-delay: 0.46s; }
+
+/* hover naik + glow */
+#app [class*="grid-cols"] > div:hover,
+#app a[href^="/server/"]:has(.status-bar):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45), 0 0 22px rgba(99, 102, 241, 0.16);
+  transition: transform 0.18s ease, box-shadow 0.25s ease;
+}
+
+/* server list rows (dashboard) */
+#app a[href^="/server/"]:has(.status-bar) {
+  animation: slideRight 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  transition: transform 0.18s ease, box-shadow 0.25s ease;
+}
+#app a[href^="/server/"]:has(.status-bar):nth-child(1) { animation-delay: 0.05s; }
+#app a[href^="/server/"]:has(.status-bar):nth-child(2) { animation-delay: 0.11s; }
+#app a[href^="/server/"]:has(.status-bar):nth-child(3) { animation-delay: 0.17s; }
+#app a[href^="/server/"]:has(.status-bar):nth-child(4) { animation-delay: 0.23s; }
+#app a[href^="/server/"]:has(.status-bar):nth-child(5) { animation-delay: 0.29s; }
+#app a[href^="/server/"]:has(.status-bar):nth-child(6) { animation-delay: 0.35s; }
+#app a[href^="/server/"]:has(.status-bar):nth-child(n+7) { animation-delay: 0.4s; }
+
+/* grey row boxes (Files/Users/Schedules dsb) */
+#app [class*="shadow"][class*="rounded"] {
+  animation: riseIn 0.45s ease backwards;
+  transition: transform 0.18s ease, box-shadow 0.25s ease;
+}
+#app [class*="shadow"][class*="rounded"]:nth-child(2) { animation-delay: 0.1s; }
+#app [class*="shadow"][class*="rounded"]:nth-child(n+3) { animation-delay: 0.18s; }
+
+/* baris table */
+#app table tbody tr {
+  animation: slideRight 0.4s ease backwards;
+  transition: background 0.15s ease;
+}
+#app table tbody tr:nth-child(1) { animation-delay: 0.04s; }
+#app table tbody tr:nth-child(2) { animation-delay: 0.09s; }
+#app table tbody tr:nth-child(3) { animation-delay: 0.14s; }
+#app table tbody tr:nth-child(4) { animation-delay: 0.19s; }
+#app table tbody tr:nth-child(5) { animation-delay: 0.24s; }
+#app table tbody tr:nth-child(n+6) { animation-delay: 0.28s; }
+#app table tbody tr:hover { background: rgba(99, 102, 241, 0.12); }
+
+/* header table: kilat sweep pas load */
+#app table thead th {
+  background-image: linear-gradient(110deg, transparent 30%, rgba(129, 140, 248, 0.18) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: sweep 1.4s ease 0.15s 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app * { animation: none !important; }
+}
+
+/* ===== glowing glass stats + bar progress ===== */
+#app .dyn-glass {
+  position: relative;
+  background: linear-gradient(160deg, rgba(30, 41, 59, 0.55), rgba(15, 23, 42, 0.7)) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(99, 102, 241, 0.35) !important;
+  box-shadow: 0 0 18px rgba(99, 102, 241, 0.18), inset 0 0 24px rgba(56, 189, 248, 0.05) !important;
+  border-radius: 14px !important;
+  overflow: hidden;
+}
+#app .dyn-glass::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(110deg, transparent 35%, rgba(129, 140, 248, 0.10) 50%, transparent 65%);
+  background-size: 250% 100%;
+  animation: sweep 5s linear infinite;
+  pointer-events: none;
+}
+#app .dynbar {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 7px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: visible;
+}
+#app .dynbar > i {
+  display: block; height: 100%; width: 0%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #16a34a, #4ade80);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.9);
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1), background 0.4s ease, box-shadow 0.4s ease;
+}
+#app .dynbar.mid > i {
+  background: linear-gradient(90deg, #d97706, #fbbf24);
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.9);
+}
+#app .dynbar.high > i {
+  background: linear-gradient(90deg, #dc2626, #f87171);
+  box-shadow: 0 0 14px rgba(239, 68, 68, 1);
+  animation: dynBarPulse 1s ease-in-out infinite;
+}
+#app .dynbar > b {
+  position: absolute; right: 6px; bottom: 10px;
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.03em;
+  color: rgba(226, 232, 240, 0.85);
+  font-variant-numeric: tabular-nums;
+}
+@keyframes dynBarPulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.5); }
+}
+
+/* ===== dashboard server list makin keren ===== */
+#app a[href^="/server/"]:has(.status-bar) {
+  background: linear-gradient(120deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.75)) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 14px;
+  overflow: hidden;
+}
+/* avatar icon gradient */
+#app a[href^="/server/"]:has(.status-bar) .icon {
+  width: 46px; height: 46px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.45);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+#app a[href^="/server/"]:has(.status-bar) .icon svg { color: #fff !important; }
+#app a[href^="/server/"]:has(.status-bar):hover .icon {
+  transform: scale(1.08) rotate(-4deg);
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.7);
+}
+/* status bar jadi aksen Neon */
+#app a[href^="/server/"]:has(.status-bar) .status-bar {
+  width: 4px !important;
+  opacity: 1 !important;
+  border-radius: 9999px;
+  filter: saturate(1.4);
+}
+/* jalan = glow hijau + pulse */
+#app a[href^="/server/"]:has(.status-bar):has(.status-bar.bg-green-500) {
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.12);
+}
+#app a[href^="/server/"]:has(.status-bar):has(.status-bar.bg-green-500) .status-bar {
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.9);
+  animation: statusPulse 1.8s ease-in-out infinite;
+}
+/* mati = redup */
+#app a[href^="/server/"]:has(.status-bar):has(.status-bar.bg-red-500) { opacity: 0.82; }
+#app a[href^="/server/"]:has(.status-bar):has(.status-bar.bg-red-500):hover { opacity: 1; }
+@keyframes statusPulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+/* icon ngambang pelan bergantian */
+#app a[href^="/server/"]:has(.status-bar) .icon {
+  animation: iconBob 2.2s ease-in-out infinite;
+}
+@keyframes iconBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px) rotate(3deg); }
+}
+#app a[href^="/server/"]:has(.status-bar):nth-child(odd) .icon { animation-delay: -1.1s; }
+
+/* glow border napas buat server yang jalan */
+#app a[href^="/server/"]:has(.status-bar):has(.status-bar.bg-green-500) {
+  animation: liveGlow 1.6s ease-in-out infinite;
+}
+@keyframes liveGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.10); }
+  50% { box-shadow: 0 0 26px rgba(34, 197, 94, 0.32); }
+}
+
+/* ===== tampilkan stats CPU/RAM/Disk/Network di daftar server (mobile) ===== */
+#app a[href^="/server/"]:has(.status-bar) {
+  display: grid !important;
+  grid-template-columns: repeat(12, 1fr) !important;
+  row-gap: 6px;
+  padding-bottom: 12px !important;
+}
+/* nama server tetap baris penuh */
+#app a[href^="/server/"]:has(.status-bar) > div:first-child { grid-column: span 12; }
+/* blok network/ip (awalnya lg only) */
+#app a[href^="/server/"]:has(.status-bar) > div:nth-child(2) {
+  display: block !important;
+  grid-column: span 12;
+}
+/* blok usage (awalnya sm only) */
+#app a[href^="/server/"]:has(.status-bar) > div:nth-child(3) {
+  display: flex !important;
+  grid-column: span 12;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+#app a[href^="/server/"]:has(.status-bar) > div:nth-child(3) > div {
+  display: block !important;
+  flex: 1;
+  text-align: center;
+}
+#app a[href^="/server/"]:has(.status-bar) > div:nth-child(3) > div > div {
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+}
+#app a[href^="/server/"]:has(.status-bar) > div:nth-child(3) > div svg { width: 12px; }
+/* nilai usage terang + mono biar kebaca */
+#app a[href^="/server/"]:has(.status-bar) > div:nth-child(3) p {
+  font-size: 11.5px !important;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+#app a[href^="/server/"]:has(.status-bar) > div:nth-child(3) p + p {
+  font-size: 10px !important;
+  opacity: 0.55;
+}
+/* IP address style */
+#app a[href^="/server/"]:has(.status-bar) > div:nth-child(2) p {
+  font-size: 11.5px !important;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+/* ===== file manager rows: rapi + halus (ga mengubah layout) ===== */
+#app div:has(> a[href*="/files"]) {
+  border-radius: 10px;
+  margin-bottom: 4px;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+  animation: slideRight 0.35s ease backwards;
+}
+#app div:nth-child(1):has(> a[href*="/files"]) { animation-delay: 0.03s; }
+#app div:nth-child(2):has(> a[href*="/files"]) { animation-delay: 0.07s; }
+#app div:nth-child(3):has(> a[href*="/files"]) { animation-delay: 0.11s; }
+#app div:nth-child(4):has(> a[href*="/files"]) { animation-delay: 0.15s; }
+#app div:nth-child(5):has(> a[href*="/files"]) { animation-delay: 0.19s; }
+#app div:nth-child(n+6):has(> a[href*="/files"]) { animation-delay: 0.23s; }
+#app div:has(> a[href*="/files"]):hover {
+  transform: translateX(3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), 0 0 16px rgba(99, 102, 241, 0.12);
+}
+#app a[href*="/files"] { border-radius: 10px; }
+
+/* ===== tema gelap gradient + glass (semua halaman panel) ===== */
+body.bg-neutral-800 {
+  background: radial-gradient(1100px 650px at 12% -5%, #1b2a52 0%, transparent 55%),
+    radial-gradient(900px 600px at 95% 8%, #33205c 0%, transparent 52%),
+    radial-gradient(800px 700px at 50% 105%, #123047 0%, transparent 55%),
+    #10141f !important;
+  min-height: 100vh;
+}
+/* header/nav jadi glass */
+#app header, #app nav:first-of-type {
+  backdrop-filter: blur(12px);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.55)) !important;
+}
+/* tombol Upload / New File / Create Directory */
+#app button {
+  border-radius: 12px !important;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+#app button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.12);
+}
+#app button:active { transform: translateY(0) scale(0.98); }
+/* aksen gradient buat tombol biru utama */
+#app form button[type="submit"] {
+  background: linear-gradient(135deg, #2563eb, #6366f1) !important;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+}
+/* file rows ngaca halus */
+#app div:has(> a[href*="/files"]) {
+  background: linear-gradient(120deg, rgba(30, 41, 59, 0.55), rgba(15, 23, 42, 0.65));
+  border: 1px solid rgba(148, 163, 184, 0.10);
+}
+#app div:has(> a[href*="/files"]):hover {
+  background: linear-gradient(120deg, rgba(51, 65, 85, 0.65), rgba(30, 41, 59, 0.7));
+  border-color: rgba(99, 102, 241, 0.35);
+}
+/* icon file/folder di list dikasih warna */
+#app a[href*="/files"] svg { color: #a5b4fc; }
+#app a[href*="/files"]:hover svg { color: #c7d2fe; }
+/* tab Console/Files/... aktif glow dikit */
+#app a[class*="border-b"], #app [role="navigation"] a {
+  transition: text-shadow 0.2s ease, transform 0.15s ease;
+}
+#app a[class*="border-b"]:hover { transform: translateY(-1px); }
