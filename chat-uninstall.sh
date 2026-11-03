@@ -49,6 +49,7 @@ rm -f "$PANEL_DIR/app/Http/Controllers/ChatController.php" \
       "$PANEL_DIR"/database/migrations/*create_chat_room_tables.php \
       "$PANEL_DIR/public/assets/custom-chat.css" \
       "$PANEL_DIR/public/assets/custom-chat.js" \
+      "$PANEL_DIR/public/sw-notify.js" \
       "$PANEL_DIR/routes/base.php.bak-chat"
 
 WEBUSER="www-data"; [ -d /usr/share/nginx ] && WEBUSER="nginx"
