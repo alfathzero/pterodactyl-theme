@@ -88,3 +88,39 @@
 .spot-add button:hover { background: #25d366; }
 .spot-empty { text-align: center; font-size: 11px; color: rgba(255,255,255,0.4); padding: 12px 0; }
 @media (prefers-reduced-motion: reduce) { #spot-orb.playing { animation: none; } }
+
+/* ===== orb developer (Telegram) — di atas orb spotify ===== */
+#dev-orb {
+  position: fixed; right: 20px; bottom: 94px; z-index: 55;
+  width: 46px; height: 46px; border-radius: 9999px;
+  background: radial-gradient(circle at 30% 25%, #5ecbff, #2AABEE 55%, #1c86c2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 18px rgba(42, 171, 238, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; text-decoration: none; cursor: pointer;
+  animation: devFloat 3.5s ease-in-out infinite;
+  transition: transform 0.2s ease, opacity 0.25s ease, bottom 0.25s ease;
+}
+#dev-orb svg { width: 22px; height: 22px; }
+#dev-orb:hover { transform: scale(1.1); animation-play-state: paused; }
+#dev-orb:active { transform: scale(0.92); }
+#dev-orb.hide { opacity: 0; pointer-events: none; bottom: 70px; }
+@keyframes devFloat {
+  0%, 100% { margin-bottom: 0; }
+  50% { margin-bottom: 8px; }
+}
+#dev-orb .dev-tip {
+  position: absolute; right: 56px; top: 50%; transform: translateY(-50%) translateX(6px);
+  background: rgba(10, 14, 20, 0.94); border: 1px solid rgba(42, 171, 238, 0.4);
+  color: #fff; font-size: 11px; font-weight: 700; line-height: 1.35; text-align: right;
+  padding: 7px 10px; border-radius: 10px; white-space: nowrap;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+  opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+#dev-orb .dev-tip i { font-style: normal; font-weight: 500; color: #7dd3fc; font-size: 10px; }
+#dev-orb:hover .dev-tip, #dev-orb:focus .dev-tip {
+  opacity: 1; transform: translateY(-50%) translateX(0);
+}
+@media (hover: none) { #dev-orb .dev-tip { display: none; } }
+@media (prefers-reduced-motion: reduce) { #dev-orb { animation: none; } }
