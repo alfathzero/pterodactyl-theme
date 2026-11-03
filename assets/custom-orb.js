@@ -117,6 +117,7 @@
       e.stopPropagation();
       var open = menu.classList.toggle('open');
       mainOrb.classList.toggle('open', open);
+      if (!open) closeAllPanels(); // pencet X = rapikan semua: menu + panel musik + chat tutup
     });
     document.addEventListener('click', function (e) {
       if (!menu.classList.contains('open')) return;
@@ -168,6 +169,10 @@
     if (!menu) return;
     menu.classList.remove('open');
     mainOrb.classList.remove('open');
+  }
+  function closeAllPanels() {
+    if (S.open) { S.open = false; panel.classList.remove('open'); }
+    if (window.PteroChat) window.PteroChat.close();
   }
 
   // API buat custom-chat.js
