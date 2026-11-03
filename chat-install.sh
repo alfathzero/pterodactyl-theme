@@ -72,6 +72,8 @@ echo "[5/5] Assets + clear cache + permission..."
 for f in custom-chat.css custom-chat.js custom-orb.css custom-orb.js; do
   cp "$REPO_DIR/assets/$f" "$PANEL_DIR/public/assets/$f"
 done
+# service worker buat notifikasi chat (di root public, bukan /assets)
+[ -f "$REPO_DIR/chat/sw-notify.js" ] && cp "$REPO_DIR/chat/sw-notify.js" "$PANEL_DIR/public/sw-notify.js"
 sudo -u www-data php "$PANEL_DIR/artisan" route:clear 2>/dev/null || php "$PANEL_DIR/artisan" route:clear
 sudo -u www-data php "$PANEL_DIR/artisan" config:clear 2>/dev/null || true
 sudo -u www-data php "$PANEL_DIR/artisan" view:clear 2>/dev/null || true
