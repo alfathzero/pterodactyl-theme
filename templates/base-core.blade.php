@@ -142,5 +142,5 @@
     @parent
     <script src="/assets/custom-island.js?v=7"></script>
     <script src="/assets/custom-stats.js?v=1"></script>
-    <script src="/assets/custom-orb.js?v=3"></script>
+    <script src="/assets/custom-orb.js?v=4"></script>
 @endsection
