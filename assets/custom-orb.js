@@ -8,7 +8,8 @@
     play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>',
     pause: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>',
     stop: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>',
-    file: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-3 8.5c0 .8-.7 1.5-1.5 1.5h-5c-.8 0-1.5-.7-1.5-1.5v-3c0-.8.7-1.5 1.5-1.5h1.8l.4.6c.1.2.3.3.5.3h2.3c.8 0 1.5.7 1.5 1.5v2.1z"/></svg>'
+    file: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-3 8.5c0 .8-.7 1.5-1.5 1.5h-5c-.8 0-1.5-.7-1.5-1.5v-3c0-.8.7-1.5 1.5-1.5h1.8l.4.6c.1.2.3.3.5.3h2.3c.8 0 1.5.7 1.5 1.5v2.1z"/></svg>',
+    telegram: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>'
   };
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function fmt(t) { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ':' + ('0' + (t % 60)).slice(-2); }
@@ -82,6 +83,13 @@
       '<input type="file" id="spotFile" accept="audio/*" multiple style="display:none">';
     document.body.appendChild(orb);
     document.body.appendChild(panel);
+    // orb developer (Telegram) — di atas orb spotify
+    var dev = document.createElement('a');
+    dev.id = 'dev-orb'; dev.href = 'https://t.me/sanoofc'; dev.target = '_blank'; dev.rel = 'noopener noreferrer';
+    dev.title = 'Developer: Sano Official';
+    dev.setAttribute('aria-label', 'Developer Sano Official — Telegram');
+    dev.innerHTML = IC.telegram + '<span class="dev-tip">Sano Official 🤙<br><i>t.me/sanoofc</i></span>';
+    document.body.appendChild(dev);
     titleEl = document.getElementById('spotTitle'); subEl = document.getElementById('spotSub');
     fillEl = document.getElementById('spotFill'); knobEl = document.getElementById('spotKnob');
     tCur = document.getElementById('spotCur'); tTot = document.getElementById('spotTot');
@@ -89,7 +97,12 @@
     urlIn = document.getElementById('spotUrl'); nameIn = document.getElementById('spotNm');
     fileIn = document.getElementById('spotFile');
 
-    orb.addEventListener('click', function () { S.open = !S.open; panel.classList.toggle('open', S.open); renderList(); });
+    orb.addEventListener('click', function () {
+      S.open = !S.open; panel.classList.toggle('open', S.open);
+      var dv = document.getElementById('dev-orb');
+      if (dv) dv.classList.toggle('hide', S.open);
+      renderList();
+    });
     playBtn.addEventListener('click', toggle);
     document.getElementById('spotStop').addEventListener('click', stop);
     document.getElementById('spotNext').addEventListener('click', function () { jump(1); });
