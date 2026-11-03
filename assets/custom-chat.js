@@ -25,6 +25,43 @@
   function avaStyle(name) { var h = hue(name); return 'background:linear-gradient(135deg,hsl(' + h + ',72%,55%),hsl(' + ((h + 45) % 360) + ',72%,42%))'; }
   function initials(name) { return name.replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || '??'; }
   var soundOn = localStorage.getItem('pcSound') !== '0';
+  var ICON = '/favicons/android-chrome-192x192.png';
+  var notifOn = function () { return 'Notification' in window && Notification.permission === 'granted' && localStorage.getItem('pcNotif') !== '0'; };
+  var swReg = null;
+  function regSW() {
+    if ('serviceWorker' in window.navigator) {
+      navigator.serviceWorker.register('/sw-notify.js').then(function (r) { swReg = r; }).catch(function () {});
+      navigator.serviceWorker.addEventListener('message', function (e) {
+        if (e.data && e.data.type === 'pterochat:open') open();
+      });
+    }
+  }
+  function notifyMsg(m) {
+    if (!notifOn() || !st.my) return;
+    var me = m.mentions && m.mentions.indexOf(st.my.id) >= 0;
+    var title = me ? '✨ ' + m.user.username + ' nyebut lu' : '💬 ' + m.user.username;
+    var body = m.deleted ? 'pesan dihapus' : String(m.body).replace(/\n/g, ' ').slice(0, 90);
+    try {
+      var opts = { body: body, icon: ICON, badge: ICON, tag: 'pterochat' + (me ? '-m' : '') };
+      if (swReg && swReg.showNotification) swReg.showNotification(title, opts);
+    } catch (e) {}
+  }
+  function nbtnState() {
+    if (!els.nbtn) return;
+    var on = notifOn();
+    els.nbtn.textContent = on ? '🔔' : '🔕';
+    els.nbtn.classList.toggle('off', !on);
+  }
+  function hidePerm() { if (els.perm) els.perm.classList.remove('show'); }
+  function askNotif() {
+    if (!('Notification' in window)) { toast('Browser ga dukung notifikasi'); return; }
+    if (Notification.permission === 'denied') { toast('🚫 Browser udah ngeblock — aktifin di setelan situs'); return; }
+    Notification.requestPermission().then(function (p) {
+      if (p === 'granted') { localStorage.setItem('pcNotif', '1'); nbtnState(); toast('🔔 Notifikasi aktif!'); }
+      else toast('Belum keaktif (' + p + ')');
+      hidePerm();
+    });
+  }
   var actx = null;
   function beep(freqs) {
     if (!soundOn) return;
@@ -60,7 +97,8 @@
     win.id = 'chat-win';
     win.innerHTML =
       '<div class="cm-head"><span class="cm-dot"></span>Chat Room<span class="cm-online">…</span>' +
-      '<span class="cm-tools"><button class="cm-tool" id="cmSound" title="Notifikasi">🔔</button><button class="cm-tool" id="cmClose" title="Tutup">✕</button></span></div>' +
+      '<span class="cm-tools"><button class="cm-tool" id="cmNotif" title="Notifikasi browser">🔕</button><button class="cm-tool" id="cmSound" title="Suara">🔊</button><button class="cm-tool" id="cmClose" title="Tutup">✕</button></span></div>' +
+      '<div class="cm-perm" id="cmPerm">🔔 Nyalakan notifikasi chat biar ga ketinggalan pesan? <button id="cmPermYes">Nyalakan</button><button id="cmPermNo">Nanti</button></div>' +
       '<div class="cm-banner" id="cmBanner"></div>' +
       '<div class="cm-list" id="cmList"></div>' +
       '<button class="cm-newbtn" id="cmNew">↓ pesan baru</button>' +
@@ -76,10 +114,14 @@
     els.sound.addEventListener('click', function () {
       soundOn = !soundOn; localStorage.setItem('pcSound', soundOn ? '1' : '0');
       els.sound.classList.toggle('off', !soundOn);
-      els.sound.textContent = soundOn ? '🔔' : '🔕';
+      els.sound.textContent = soundOn ? '🔊' : '🔇';
     });
     els.sound.classList.toggle('off', !soundOn);
-    els.sound.textContent = soundOn ? '🔔' : '🔕';
+    els.sound.textContent = soundOn ? '🔊' : '🔇';
+    els.nbtn.addEventListener('click', askNotif);
+    els.permYes.addEventListener('click', askNotif);
+    els.permNo.addEventListener('click', function () { localStorage.setItem('pcNotifHint', '1'); hidePerm(); });
+    nbtnState();
 
     els.send.addEventListener('click', send);
     els.input.addEventListener('keydown', function (e) {
@@ -119,6 +161,11 @@
     els.toast = document.getElementById('cmToast');
     els.close = document.getElementById('cmClose');
     els.sound = document.getElementById('cmSound');
+    els.nbtn = document.getElementById('cmNotif');
+    els.perm = document.getElementById('cmPerm');
+    els.permYes = document.getElementById('cmPermYes');
+    els.permNo = document.getElementById('cmPermNo');
+    nbtnState();
   }
   function autosize() {
     els.input.style.height = 'auto';
@@ -283,11 +330,13 @@
         st.unread++;
         if (m.user.id !== st.my.id && m.mentions && m.mentions.indexOf(st.my.id) >= 0) st.mention = true;
         if (!document.hidden && m.user.id !== st.my.id) beep(m.mentions && m.mentions.indexOf(st.my.id) >= 0 ? [660, 990] : [880]);
+        if (m.user.id !== st.my.id && (document.hidden || !document.hasFocus())) notifyMsg(m);
         badge();
         return;
       }
       renderMsg(m);
       if (m.user.id !== st.my.id && !document.hidden) beep(m.mentions && m.mentions.indexOf(st.my.id) >= 0 ? [660, 990] : [880]);
+      if (m.user.id !== st.my.id && document.hidden) notifyMsg(m);
       if (firstLoad) return;
       if (!atB && m.user.id !== st.my.id) {
         st.newCount++;
@@ -320,7 +369,8 @@
   function poll() {
     st.ticks++;
     if (!st.open && st.ticks % CLOSED_EVERY !== 0) return;
-    if (document.hidden && !st.open) return;
+    // tab di background TETAP polling (buat notif), cuma diperlambat kalau chat kebuka
+    if (document.hidden && st.open && st.ticks % 2 !== 0) return;
     api(API + '/messages?after=' + st.lastId).then(function (r) {
       if (!r.ok) return;
       st.my = r.data.my; banner(st.my);
@@ -414,6 +464,7 @@
     els.win.classList.add('open');
     st.unread = 0; st.mention = false; badge();
     openLatest();
+    if ('Notification' in window && Notification.permission === 'default' && !localStorage.getItem('pcNotifHint') && els.perm) els.perm.classList.add('show');
     if (!('ontouchstart' in window)) setTimeout(function () { els.input.focus(); }, 250);
   }
   function close() {
@@ -433,6 +484,12 @@
   // ============ start ============
   function init() {
     build();
+    regSW();
+    // klik notif pas tab belum ada → SW buka /?chat=1 → auto buka chat
+    if (/[?&]chat=1/.test(location.search)) {
+      try { history.replaceState(null, '', location.pathname); } catch (e) {}
+      setTimeout(open, 400);
+    }
     // ambil identitas + lastId awal (buat unread pas ketutup)
     api(API + '/messages?after=0').then(function (r) {
       if (!r.ok) return;
