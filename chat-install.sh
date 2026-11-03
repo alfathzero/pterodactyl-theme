@@ -29,13 +29,13 @@ BASE="$PANEL_DIR/routes/base.php"
 # 1. backup route asli dulu
 if [ ! -f "$BASE.bak-chat" ]; then
   cp "$BASE" "$BASE.bak-chat"
-  echo "[1/5] Backup routes/base.php -> base.php.bak-chat"
+  echo "[1/6] Backup routes/base.php -> base.php.bak-chat"
 else
-  echo "[1/5] Backup route udah ada, lanjut"
+  echo "[1/6] Backup route udah ada, lanjut"
 fi
 
 # 2. file backend
-echo "[2/5] Copy controller, model, migration, route..."
+echo "[2/6] Copy controller, model, migration, route..."
 mkdir -p "$PANEL_DIR/app/Http/Controllers" "$PANEL_DIR/app/Models" "$PANEL_DIR/database/migrations" "$PANEL_DIR/routes"
 cp "$REPO_DIR/chat/app/Http/Controllers/ChatController.php" "$PANEL_DIR/app/Http/Controllers/"
 cp "$REPO_DIR/chat/app/Models/ChatMessage.php" "$PANEL_DIR/app/Models/"
@@ -50,7 +50,7 @@ import sys
 base = sys.argv[1]
 src = open(base).read()
 if "CHAT-ROOM START" in src:
-    print("[3/5] require chat.php udah ada di routes/base.php")
+    print("[3/6] require chat.php udah ada di routes/base.php")
 else:
     block = ("/* CHAT-ROOM START — custom chat room (pterodactyl-theme) */\n"
              "require __DIR__ . '/chat.php';\n"
@@ -59,21 +59,35 @@ else:
     if i == -1:
         sys.exit("[!] Ga nemu 'Route::' di base.php — sisipin manual: require __DIR__.'/chat.php'; di paling awal")
     open(base, "w").write(src[:i] + block + src[i:])
-    print("[3/5] require chat.php disisipin ke routes/base.php")
+    print("[3/6] require chat.php disisipin ke routes/base.php")
 PYEOF
 
 # 4. bikin tabel
-echo "[4/5] Migration (buat tabel chat_*)..."
+echo "[4/6] Migration (buat tabel chat_*)..."
 php "$PANEL_DIR/artisan" migrate --force 2>/dev/null \
   || sudo -u www-data php "$PANEL_DIR/artisan" migrate --force
 
 # 5. assets + cache + permission
-echo "[5/5] Assets + clear cache + permission..."
+echo "[5/6] Assets + clear cache + permission..."
 for f in custom-chat.css custom-chat.js custom-orb.css custom-orb.js; do
   cp "$REPO_DIR/assets/$f" "$PANEL_DIR/public/assets/$f"
 done
 # service worker buat notifikasi chat (di root public, bukan /assets)
 [ -f "$REPO_DIR/chat/sw-notify.js" ] && cp "$REPO_DIR/chat/sw-notify.js" "$PANEL_DIR/public/sw-notify.js"
+
+# 6. auto-prune: pesan lebih tua dari 24 jam dihapus otomatis (cron www-data)
+echo "[6/6] Cron auto-prune (pesan >24 jam)..."
+if [ -f "$REPO_DIR/chat/app/Console/Commands/ChatPruneCommand.php" ]; then
+  mkdir -p "$PANEL_DIR/app/Console/Commands"
+  cp "$REPO_DIR/chat/app/Console/Commands/ChatPruneCommand.php" "$PANEL_DIR/app/Console/Commands/"
+fi
+CRON_TAG="pterochat-prune (pterodactyl-theme)"
+CRON_LINE="*/30 * * * * php $PANEL_DIR/artisan chat:prune --hours=24 > /dev/null 2>&1"
+TMPCT="$(mktemp)"
+crontab -u www-data -l 2>/dev/null | grep -v -e 'pterochat-prune' -e "$PANEL_DIR/artisan chat:prune" > "$TMPCT" || true
+{ cat "$TMPCT"; echo "# pterochat-prune START ($CRON_TAG)"; echo "$CRON_LINE"; echo "# pterochat-prune END"; } | crontab -u www-data -
+rm -f "$TMPCT"
+echo "    cron: tiap 30 menit hapus pesan > 24 jam"
 sudo -u www-data php "$PANEL_DIR/artisan" route:clear 2>/dev/null || php "$PANEL_DIR/artisan" route:clear
 sudo -u www-data php "$PANEL_DIR/artisan" config:clear 2>/dev/null || true
 sudo -u www-data php "$PANEL_DIR/artisan" view:clear 2>/dev/null || true
