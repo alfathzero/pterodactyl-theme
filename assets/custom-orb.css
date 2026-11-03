@@ -1,29 +1,77 @@
-/* ===== Spotify-style floating orb player ===== */
-#spot-orb {
-  position: fixed; right: 16px; bottom: 22px; z-index: 55;
+/* ===== orb menu: chat + telegram + musik ===== */
+#orb-menu { position: fixed; right: 16px; bottom: 22px; z-index: 55; }
+#main-orb {
+  position: fixed; right: 16px; bottom: 22px; z-index: 60;
   width: 58px; height: 58px; border-radius: 9999px;
-  background: radial-gradient(circle at 30% 25%, #3bd16f, #1db954 55%, #0e7a34);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.55), 0 0 22px rgba(29, 185, 84, 0.45);
+  background: linear-gradient(150deg, #1b2536, #0d1420);
+  border: 1px solid rgba(129, 140, 248, 0.55);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.55), 0 0 20px rgba(99, 102, 241, 0.35);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; user-select: none; -webkit-user-select: none;
-  transition: transform 0.2s ease, box-shadow 0.25s ease;
+  cursor: pointer; user-select: none; -webkit-user-select: none; color: #e0e7ff;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
 }
-#spot-orb:hover { transform: scale(1.07); }
-#spot-orb:active { transform: scale(0.94); }
-#spot-orb svg { width: 30px; height: 30px; }
-#spot-orb.playing { animation: orbSpin 6s linear infinite, orbGlow 1.8s ease-in-out infinite; }
-@keyframes orbSpin { to { transform: rotate(360deg); } }
-@keyframes orbGlow {
-  0%, 100% { box-shadow: 0 8px 26px rgba(0,0,0,.55), 0 0 18px rgba(29,185,84,.35); }
-  50% { box-shadow: 0 8px 26px rgba(0,0,0,.55), 0 0 34px rgba(29,185,84,.8); }
-}
-#spot-orb .spot-eq {
-  position: absolute; inset: 0; display: none;
-  align-items: flex-end; justify-content: center; gap: 3px; padding-bottom: 17px;
-}
-#spot-orb.playing .spot-eq { display: none; }
+#main-orb:hover { transform: scale(1.07); }
+#main-orb:active { transform: scale(0.93); }
+#main-orb svg { width: 26px; height: 26px; position: absolute; transition: opacity 0.18s ease, transform 0.18s ease; }
+#main-orb .mo-x { opacity: 0; transform: rotate(-90deg) scale(0.4); }
+#main-orb.open .mo-bub { opacity: 0; transform: rotate(90deg) scale(0.4); }
+#main-orb.open .mo-x { opacity: 1; transform: rotate(0) scale(1); }
+#main-orb.playing { box-shadow: 0 8px 26px rgba(0,0,0,.55), 0 0 22px rgba(29,185,84,.55); border-color: rgba(29,185,84,.55); }
 
+/* sub-orb */
+.orb-sub {
+  position: fixed; right: 22px; z-index: 59;
+  width: 46px; height: 46px; border-radius: 9999px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; text-decoration: none; color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  opacity: 0; transform: scale(0.3) translateY(26px); pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
+}
+.orb-sub svg { width: 21px; height: 21px; }
+#orb-menu.open .orb-sub { opacity: 1; transform: none; pointer-events: auto; }
+#orb-menu.open #sub-music { transition-delay: 0.02s; }
+#orb-menu.open #sub-tg { transition-delay: 0.08s; }
+#orb-menu.open #sub-chat { transition-delay: 0.14s; }
+.orb-sub:hover { filter: brightness(1.15); transform: scale(1.1); }
+.orb-sub:active { transform: scale(0.92); }
+#sub-chat { bottom: 204px; background: linear-gradient(150deg, #818cf8, #4f46e5); box-shadow: 0 6px 20px rgba(0,0,0,.5), 0 0 16px rgba(99,102,241,.5); }
+#sub-tg { bottom: 148px; background: radial-gradient(circle at 30% 25%, #5ecbff, #2AABEE 55%, #1c86c2); }
+#sub-music { bottom: 92px; background: radial-gradient(circle at 30% 25%, #3bd16f, #1db954 55%, #0e7a34); }
+#sub-music svg { fill: #07110b; }
+#sub-music.playing { animation: orbGlow 1.8s ease-in-out infinite; }
+@keyframes orbGlow {
+  0%, 100% { box-shadow: 0 6px 20px rgba(0,0,0,.5), 0 0 12px rgba(29,185,84,.35); }
+  50% { box-shadow: 0 6px 20px rgba(0,0,0,.5), 0 0 26px rgba(29,185,84,.85); }
+}
+
+/* label kecil pas hover (desktop) */
+@media (hover: hover) {
+  .orb-sub::after {
+    content: attr(data-tip);
+    position: absolute; right: 56px; top: 50%; transform: translateY(-50%) translateX(6px);
+    background: rgba(10, 14, 20, 0.94); border: 1px solid rgba(129, 140, 248, 0.35);
+    color: #fff; font-size: 11px; font-weight: 700; padding: 5px 9px; border-radius: 8px;
+    white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.18s ease, transform 0.18s ease;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  .orb-sub:hover::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+/* badge unread */
+.orb-badge {
+  position: absolute; top: -5px; right: -5px; min-width: 19px; height: 19px; padding: 0 5px;
+  border-radius: 9999px; background: #ef4444; color: #fff; font-size: 10.5px; font-weight: 800;
+  display: none; align-items: center; justify-content: center;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.8); font-family: system-ui, sans-serif;
+}
+.orb-badge.show { display: inline-flex; }
+.orb-badge.mention { background: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.9); }
+
+@media (prefers-reduced-motion: reduce) { .orb-sub, #main-orb, #sub-music.playing { transition: none; animation: none; } }
+
+/* ===== panel player musik ===== */
 #spot-panel {
   position: fixed; right: 14px; bottom: 92px; z-index: 56;
   width: min(330px, 94vw);
@@ -87,40 +135,3 @@
 }
 .spot-add button:hover { background: #25d366; }
 .spot-empty { text-align: center; font-size: 11px; color: rgba(255,255,255,0.4); padding: 12px 0; }
-@media (prefers-reduced-motion: reduce) { #spot-orb.playing { animation: none; } }
-
-/* ===== orb developer (Telegram) — di atas orb spotify ===== */
-#dev-orb {
-  position: fixed; right: 20px; bottom: 94px; z-index: 55;
-  width: 46px; height: 46px; border-radius: 9999px;
-  background: radial-gradient(circle at 30% 25%, #5ecbff, #2AABEE 55%, #1c86c2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 18px rgba(42, 171, 238, 0.45);
-  display: flex; align-items: center; justify-content: center;
-  color: #fff; text-decoration: none; cursor: pointer;
-  animation: devFloat 3.5s ease-in-out infinite;
-  transition: transform 0.2s ease, opacity 0.25s ease, bottom 0.25s ease;
-}
-#dev-orb svg { width: 22px; height: 22px; }
-#dev-orb:hover { transform: scale(1.1); animation-play-state: paused; }
-#dev-orb:active { transform: scale(0.92); }
-#dev-orb.hide { opacity: 0; pointer-events: none; bottom: 70px; }
-@keyframes devFloat {
-  0%, 100% { margin-bottom: 0; }
-  50% { margin-bottom: 8px; }
-}
-#dev-orb .dev-tip {
-  position: absolute; right: 56px; top: 50%; transform: translateY(-50%) translateX(6px);
-  background: rgba(10, 14, 20, 0.94); border: 1px solid rgba(42, 171, 238, 0.4);
-  color: #fff; font-size: 11px; font-weight: 700; line-height: 1.35; text-align: right;
-  padding: 7px 10px; border-radius: 10px; white-space: nowrap;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
-  opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
-  font-family: system-ui, -apple-system, sans-serif;
-}
-#dev-orb .dev-tip i { font-style: normal; font-weight: 500; color: #7dd3fc; font-size: 10px; }
-#dev-orb:hover .dev-tip, #dev-orb:focus .dev-tip {
-  opacity: 1; transform: translateY(-50%) translateX(0);
-}
-@media (hover: none) { #dev-orb .dev-tip { display: none; } }
-@media (prefers-reduced-motion: reduce) { #dev-orb { animation: none; } }
