@@ -13,7 +13,7 @@ Dibuat buat **alfa-marketdua-officialss.alfamarket2.my.id** — bebas dipakai ul
 | 🖥 Dashboard | Daftar server jadi glass card, avatar icon gradient ungu, server ON glow hijau napas + bar status pulse, di HP tampil detail IP, CPU%, RAM, Disk per server |
 | 📊 Console | Kotak stats (Address/Uptime/CPU/Memory/Disk/Network) jadi glowing glass + **bar progress live** warna ijo→kuning→merah + grafik blok ikut ngaca |
 | 🎧 Orb Menu | Satu orb melayang pojok kanan bawah (tap → mekar 3 bola): **💬 Chat Room**, **✈️ Developer Telegram** (link + nama dev), **🎵 Musik**. Player musik: play/pause, stop, next/prev, bar progress bisa di-seek, playlist (tambah/hapus/pilih). **Import lagu dari file lokal HP** (IndexedDB, awet walau refresh) atau dari link MP3 |
-| 💬 Chat Room | Chat global antar user panel pake identitas akun (username + avatar + badge ADMIN). Polling 2.5 detik, emoji reaksi (6), **@mention** autocomplete, hapus pesan (diri/admin), **mute user** (10m/1j/24j, admin only), online count, anti-spam & rate-limit, XSS-safe. **Notifikasi browser** (tab background) + suara + badge unread. Butuh `chat-install.sh` (nyentuh app code + DB) |
+| 💬 Chat Room | Chat global antar user panel pake identitas akun (username + avatar + badge ADMIN). Polling 2.5 detik, emoji reaksi (6), **@mention** autocomplete, hapus pesan (diri/admin), **mute user** (10m/1j/24j, admin only), online count, anti-spam & rate-limit, XSS-safe. **Notifikasi browser** (tab background) + suara + badge unread. **Auto-prune: pesan >24 jam kehapus otomatis** (cron, bisa diatur `--hours=`). Butuh `chat-install.sh` (nyentuh app code + DB) |
 | 📁 Files & halaman lain | Background gradient gelap, nav glass, tombol membulat + hover lift, baris file ngaca halus, animasi masuk berjenjang, highlight table |
 
 Semua animasi otomatis nonaktif kalau OS pakai `prefers-reduced-motion`.
@@ -149,7 +149,7 @@ assets/        custom-auth-3d.css|js   -> public/assets/ (login)
                custom-orb.css|js       -> public/assets/ (orb menu: chat/tg/musik + player)
                custom-chat.css|js      -> public/assets/ (window chat)
                custom-anim.css         -> public/assets/ (tema + animasi global)
-chat/          app/ + database/ + routes/  -> app code panel (ChatController, models, migration, route)
+chat/          app/ + database/ + routes/  -> app code panel (ChatController, models, migration, route, prune command)
                sw-notify.js            -> public/sw-notify.js (service worker notifikasi chat)
 templates/     base-core.blade.php     -> resources/views/templates/base/core.blade.php
                auth-core.blade.php     -> resources/views/templates/auth/core.blade.php
