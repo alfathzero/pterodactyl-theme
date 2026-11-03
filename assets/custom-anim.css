@@ -99,7 +99,7 @@
   position: absolute; inset: 0;
   background: linear-gradient(110deg, transparent 35%, rgba(129, 140, 248, 0.10) 50%, transparent 65%);
   background-size: 250% 100%;
-  animation: sweep 5s linear infinite;
+  animation: sweep 10s linear infinite;
   pointer-events: none;
 }
 #app .dynbar {
