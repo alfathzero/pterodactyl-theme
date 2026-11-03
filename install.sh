@@ -22,7 +22,7 @@ echo "[*] Theme : $REPO_DIR"
 
 # 1. assets
 echo "[1/4] Copy assets (css/js)..."
-for f in custom-auth-3d.css custom-auth-3d.js custom-island.css custom-island.js custom-stats.js custom-anim.css; do
+for f in custom-auth-3d.css custom-auth-3d.js custom-island.css custom-island.js custom-stats.js custom-anim.css custom-orb.css custom-orb.js; do
   cp "$REPO_DIR/assets/$f" "$PANEL_DIR/public/assets/$f"
 done
 
@@ -51,4 +51,5 @@ echo ""
 echo "[✓] Selesai! Hard refresh browser (Ctrl+Shift+R) atau Incognito."
 echo "    Login: globe titik 3D + efek sentuh"
 echo "    Panel: dynamic island (jam+cuaca), tema glass, animasi list"
+echo "    Player: orb Spotify pojok kanan bawah (MP3 + file lokal HP)"
 echo "    Uninstall: ./uninstall.sh"
