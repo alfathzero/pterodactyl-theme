@@ -85,10 +85,10 @@
     document.body.appendChild(panel);
     // orb developer (Telegram) — di atas orb spotify
     var dev = document.createElement('a');
-    dev.id = 'dev-orb'; dev.href = 'https://t.me/sanoofc'; dev.target = '_blank'; dev.rel = 'noopener noreferrer';
+    dev.id = 'dev-orb'; dev.href = 'https://t.me/RAVKITTY'; dev.target = '_blank'; dev.rel = 'noopener noreferrer';
     dev.title = 'Developer: Sano Official';
     dev.setAttribute('aria-label', 'Developer Sano Official — Telegram');
-    dev.innerHTML = IC.telegram + '<span class="dev-tip">Sano Official 🤙<br><i>t.me/sanoofc</i></span>';
+    dev.innerHTML = IC.telegram + '<span class="dev-tip">Sano Official 🤙<br><i>t.me/RAVKITTY</i></span>';
     document.body.appendChild(dev);
     titleEl = document.getElementById('spotTitle'); subEl = document.getElementById('spotSub');
     fillEl = document.getElementById('spotFill'); knobEl = document.getElementById('spotKnob');
