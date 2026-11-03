@@ -9,7 +9,7 @@ AUTH="$PANEL_DIR/resources/views/templates/auth/core.blade.php"
 [ -f "$BASE.bak-theme" ] && cp "$BASE.bak-theme" "$BASE" && echo "[*] base restored"
 [ -f "$AUTH.bak-theme" ] && cp "$AUTH.bak-theme" "$AUTH" && echo "[*] auth restored"
 
-for f in custom-auth-3d.css custom-auth-3d.js custom-island.css custom-island.js custom-stats.js custom-anim.css; do
+for f in custom-auth-3d.css custom-auth-3d.js custom-island.css custom-island.js custom-stats.js custom-anim.css custom-orb.css custom-orb.js; do
   rm -f "$PANEL_DIR/public/assets/$f"
 done
 
