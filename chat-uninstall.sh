@@ -40,8 +40,20 @@ else
   echo "[*] Tabel chat_* DIBIARIN (pesan ga hilang)."
 fi
 
+echo "[*] Buang cron auto-prune..."
+if crontab -u www-data -l 2>/dev/null | grep -q "pterochat-prune"; then
+  TMPCT="$(mktemp)"
+  crontab -u www-data -l | sed '/# pterochat-prune START/,/# pterochat-prune END/d' | grep -v "artisan chat:prune" > "$TMPCT" || true
+  crontab -u www-data "$TMPCT"
+  rm -f "$TMPCT"
+  echo "    cron prune dibuang"
+else
+  echo "    (ga ada cron prune, skip)"
+fi
+
 echo "[*] Hapus file backend + assets chat..."
 rm -f "$PANEL_DIR/app/Http/Controllers/ChatController.php" \
+      "$PANEL_DIR/app/Console/Commands/ChatPruneCommand.php" \
       "$PANEL_DIR/app/Models/ChatMessage.php" \
       "$PANEL_DIR/app/Models/ChatReaction.php" \
       "$PANEL_DIR/app/Models/ChatMute.php" \
