@@ -1,6 +1,7 @@
-// Spotify-style floating orb player (MP3 URL + file lokal HP via IndexedDB)
+// Orb menu (chat + telegram + musik) — player MP3/IndexedDB + trigger chat window
 (function () {
   var LS_PL = 'spotPlaylist', LS_IDX = 'spotIndex';
+  var TG_URL = 'https://t.me/RAVKITTY';
   var ICON_LOGO = '<svg viewBox="0 0 24 24" fill="#07110b"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.5 17.3c-.2.4-.7.5-1 .3-2.9-1.8-6.5-2.2-10.8-1.2-.4.1-.8-.1-.9-.5-.1-.4.1-.8.5-.9 4.6-1 8.6-.6 11.9 1.4.3.2.4.7.3 1zm1.5-3.9c-.3.5-.8.6-1.2.4-3.3-2-8.3-2.6-12.2-1.4-.5.1-1-.1-1.2-.6-.1-.5.1-1 .6-1.2 4.4-1.3 10-.7 13.8 1.6.4.2.6.8.2 1.2zm.1-4C15.7 9 8.2 8.8 4.2 10c-.6.2-1.3-.2-1.4-.8-.2-.6.2-1.3.8-1.4 4.6-1.4 13-1.1 17.5 1.6.5.4.7 1.1.3 1.6-.4.5-1.1.6-1.8.4z"/></svg>';
   var IC = {
     prev: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zm12 0v14l-9-7z"/></svg>',
@@ -9,7 +10,10 @@
     pause: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>',
     stop: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"/></svg>',
     file: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-3 8.5c0 .8-.7 1.5-1.5 1.5h-5c-.8 0-1.5-.7-1.5-1.5v-3c0-.8.7-1.5 1.5-1.5h1.8l.4.6c.1.2.3.3.5.3h2.3c.8 0 1.5.7 1.5 1.5v2.1z"/></svg>',
-    telegram: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>'
+    telegram: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>',
+    chat: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 5.9 2 10.7c0 2.7 1.4 5.1 3.7 6.7-.1.8-.6 2.3-1.9 3.6 2.5-.2 4.4-1.3 5.4-2.1.9.2 1.8.3 2.8.3 5.5 0 10-3.9 10-8.7S17.5 2 12 2z"/></svg>',
+    bubble: '<svg class="mo-bub" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.9 3 3 6.5 3 10.7c0 2.4 1.3 4.6 3.4 6-.2 1-.9 2.4-2.2 3.3 2.3 0 4.2-.9 5.5-1.8 1.6.5 3.3.5 5 .2 3.5-.8 6.1-3.4 6.2-6.6 0 0 0-.1 0-.2C20.9 6.4 17 3 12 3z"/><circle cx="8" cy="11" r="1.2" fill="#0d1420"/><circle cx="12" cy="11" r="1.2" fill="#0d1420"/><circle cx="16" cy="11" r="1.2" fill="#0d1420"/></svg>',
+    x: '<svg class="mo-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
   };
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function fmt(t) { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ':' + ('0' + (t % 60)).slice(-2); }
@@ -60,11 +64,24 @@
   var S = { tracks: [], ix: -1, open: false };
   var d0 = loadLS(); S.tracks = d0.pl; S.ix = d0.ix;
   var audio = new Audio(); audio.volume = 0.9;
-  var orb, panel, titleEl, subEl, fillEl, knobEl, tCur, tTot, playBtn, listEl, urlIn, nameIn, fileIn;
+  var menu, mainOrb, musicOrb, panel, titleEl, subEl, fillEl, knobEl, tCur, tTot, playBtn, listEl, urlIn, nameIn, fileIn;
 
   function build() {
-    if (document.getElementById('spot-orb')) return;
-    orb = document.createElement('div'); orb.id = 'spot-orb'; orb.innerHTML = ICON_LOGO;
+    if (document.getElementById('main-orb')) return;
+    menu = document.createElement('div'); menu.id = 'orb-menu';
+    mainOrb = document.createElement('div'); mainOrb.id = 'main-orb';
+    mainOrb.setAttribute('aria-label', 'Menu');
+    mainOrb.innerHTML = IC.bubble + IC.x + '<span class="orb-badge" id="badge-main"></span>';
+    var chatSub = document.createElement('div');
+    chatSub.className = 'orb-sub'; chatSub.id = 'sub-chat'; chatSub.setAttribute('data-tip', 'Chat Room');
+    chatSub.innerHTML = IC.chat + '<span class="orb-badge" id="badge-chat"></span>';
+    var tgSub = document.createElement('a');
+    tgSub.className = 'orb-sub'; tgSub.id = 'sub-tg'; tgSub.href = TG_URL;
+    tgSub.target = '_blank'; tgSub.rel = 'noopener noreferrer'; tgSub.setAttribute('data-tip', 'Developer ✈️');
+    tgSub.innerHTML = IC.telegram;
+    musicOrb = document.createElement('div');
+    musicOrb.className = 'orb-sub'; musicOrb.id = 'sub-music'; musicOrb.setAttribute('data-tip', 'Musik 🎵');
+    musicOrb.innerHTML = ICON_LOGO;
     panel = document.createElement('div'); panel.id = 'spot-panel';
     panel.innerHTML =
       '<div class="spot-title" id="spotTitle">Nggak ada lagu</div>' +
@@ -81,15 +98,12 @@
       '<div class="spot-add"><input class="u" id="spotUrl" placeholder="Link MP3…" inputmode="url"><button class="file" id="spotFileBtn" title="Ambil dari HP">' + IC.file + '</button><button id="spotAdd">＋</button></div>' +
       '<div class="spot-add"><input class="nm full" id="spotNm" placeholder="Judul (opsional)"></div>' +
       '<input type="file" id="spotFile" accept="audio/*" multiple style="display:none">';
-    document.body.appendChild(orb);
+    document.body.appendChild(menu);
+    document.body.appendChild(mainOrb);
+    document.body.appendChild(chatSub);
+    document.body.appendChild(tgSub);
+    document.body.appendChild(musicOrb);
     document.body.appendChild(panel);
-    // orb developer (Telegram) — di atas orb spotify
-    var dev = document.createElement('a');
-    dev.id = 'dev-orb'; dev.href = 'https://t.me/RAVKITTY'; dev.target = '_blank'; dev.rel = 'noopener noreferrer';
-    dev.title = 'Developer: Sano Official';
-    dev.setAttribute('aria-label', 'Developer Sano Official — Telegram');
-    dev.innerHTML = IC.telegram + '<span class="dev-tip">Sano Official 🤙<br><i>t.me/RAVKITTY</i></span>';
-    document.body.appendChild(dev);
     titleEl = document.getElementById('spotTitle'); subEl = document.getElementById('spotSub');
     fillEl = document.getElementById('spotFill'); knobEl = document.getElementById('spotKnob');
     tCur = document.getElementById('spotCur'); tTot = document.getElementById('spotTot');
@@ -97,12 +111,29 @@
     urlIn = document.getElementById('spotUrl'); nameIn = document.getElementById('spotNm');
     fileIn = document.getElementById('spotFile');
 
-    orb.addEventListener('click', function () {
+    // ---- menu ----
+    mainOrb.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = menu.classList.toggle('open');
+      mainOrb.classList.toggle('open', open);
+    });
+    document.addEventListener('click', function (e) {
+      if (!menu.classList.contains('open')) return;
+      var t = e.target;
+      if (t.closest && (t.closest('#orb-menu') || t.closest('#main-orb') || t.closest('.orb-sub') || t.closest('#spot-panel') || t.closest('#chat-win'))) return;
+      closeMenu();
+    });
+    chatSub.addEventListener('click', function (e) {
+      e.stopPropagation(); closeMenu();
+      if (window.PteroChat) window.PteroChat.toggle();
+    });
+    musicOrb.addEventListener('click', function (e) {
+      e.stopPropagation(); closeMenu();
+      if (!S.open && window.PteroChat) window.PteroChat.close();
       S.open = !S.open; panel.classList.toggle('open', S.open);
-      var dv = document.getElementById('dev-orb');
-      if (dv) dv.classList.toggle('hide', S.open);
       renderList();
     });
+
     playBtn.addEventListener('click', toggle);
     document.getElementById('spotStop').addEventListener('click', stop);
     document.getElementById('spotNext').addEventListener('click', function () { jump(1); });
@@ -132,6 +163,29 @@
     paint(); renderList();
   }
 
+  function closeMenu() {
+    if (!menu) return;
+    menu.classList.remove('open');
+    mainOrb.classList.remove('open');
+  }
+
+  // API buat custom-chat.js
+  window.PteroOrb = {
+    closeMusic: function () {
+      if (S.open) { S.open = false; panel.classList.remove('open'); }
+    },
+    closeMenu: closeMenu,
+    setBadge: function (n, mention) {
+      ['#badge-main', '#badge-chat'].forEach(function (sel) {
+        var b = document.querySelector(sel);
+        if (!b) return;
+        b.textContent = n > 99 ? '99+' : n;
+        b.classList.toggle('show', n > 0);
+        b.classList.toggle('mention', !!mention && n > 0);
+      });
+    }
+  };
+
   function cur() { return S.tracks[S.ix]; }
   function paint() {
     var t = cur();
@@ -145,7 +199,8 @@
   function iconState() {
     var playing = !audio.paused && !audio.ended && audio.src;
     playBtn.innerHTML = playing ? IC.pause : IC.play;
-    if (orb) orb.classList.toggle('playing', !!playing);
+    if (musicOrb) musicOrb.classList.toggle('playing', !!playing);
+    if (mainOrb) mainOrb.classList.toggle('playing', !!playing);
   }
   function resolveSrc(t) {
     if (t.u.indexOf('idb:') !== 0) return Promise.resolve(t.u);
@@ -227,7 +282,8 @@
       b.addEventListener('click', function (e) { delTrack(parseInt(b.dataset.d, 10), e); });
     });
   }
-  setInterval(function () { if (document.getElementById('spot-orb') && panel && panel.classList.contains('open')) renderList(); }, 2000);
+  // re-render tick biar indikator 🎵 akurat tanpa event
+  setInterval(function () { if (document.getElementById('main-orb') && panel && panel.classList.contains('open')) renderList(); }, 2000);
 
   function init() { build(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
