@@ -4,7 +4,7 @@
 
 @section('assets')
     <link rel="stylesheet" href="/assets/custom-island.css?v=7">
-    <link rel="stylesheet" href="/assets/custom-anim.css?v=11">
+    <link rel="stylesheet" href="/assets/custom-anim.css?v=12">
     <link rel="stylesheet" href="/assets/custom-orb.css?v=2">
 @endsection
 
