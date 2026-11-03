@@ -98,11 +98,12 @@
       '<div class="spot-add"><input class="u" id="spotUrl" placeholder="Link MP3…" inputmode="url"><button class="file" id="spotFileBtn" title="Ambil dari HP">' + IC.file + '</button><button id="spotAdd">＋</button></div>' +
       '<div class="spot-add"><input class="nm full" id="spotNm" placeholder="Judul (opsional)"></div>' +
       '<input type="file" id="spotFile" accept="audio/*" multiple style="display:none">';
+    // sub-orb HARUS di dalam #orb-menu (selector .open pakai descendant)
+    menu.appendChild(chatSub);
+    menu.appendChild(tgSub);
+    menu.appendChild(musicOrb);
     document.body.appendChild(menu);
     document.body.appendChild(mainOrb);
-    document.body.appendChild(chatSub);
-    document.body.appendChild(tgSub);
-    document.body.appendChild(musicOrb);
     document.body.appendChild(panel);
     titleEl = document.getElementById('spotTitle'); subEl = document.getElementById('spotSub');
     fillEl = document.getElementById('spotFill'); knobEl = document.getElementById('spotKnob');
