@@ -11,11 +11,23 @@
   var els = {};
 
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-  function csrf() { var m = document.querySelector('meta[name="csrf-token"]'); return m ? m.content : ''; }
+  function csrf() {
+    var m = document.querySelector('meta[name="csrf-token"]') || document.querySelector('meta[name="_token"]');
+    return m ? m.content : '';
+  }
   function api(path, method, data) {
     var opt = { method: method || 'GET', credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() } };
     if (data) { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(data); }
-    return fetch(path, opt).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, data: j }; }); });
+    return fetch(path, opt).then(function (r) {
+      return r.text().then(function (txt) {
+        var j;
+        try { j = txt ? JSON.parse(txt) : {}; }
+        catch (e) { j = { error: r.status === 419 ? 'Sesi kedaluwarsa — refresh halaman' : 'Server error (' + r.status + ')' }; }
+        return { ok: r.ok, status: r.status, data: j };
+      });
+    }, function () {
+      return { ok: false, status: 0, data: { error: 'Koneksi error' } };
+    });
   }
   function wib(iso) {
     try { return new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }); }
@@ -78,6 +90,15 @@
         o.start(t + i * 0.09); o.stop(t + i * 0.09 + 0.14);
       });
     } catch (e) {}
+  }
+  function errMsg(j) {
+    if (!j) return '';
+    if (j.error) return j.error;
+    if (j.errors) {
+      var k = Object.keys(j.errors)[0];
+      if (k && j.errors[k] && j.errors[k][0]) return j.errors[k][0];
+    }
+    return j.message || '';
   }
   function toast(msg) {
     if (!els.toast) return;
@@ -188,13 +209,13 @@
   // ============ render ============
   function mentionize(body, myId) {
     return esc(body).replace(/@([A-Za-z0-9._\-]{2,24})/g, function (all, u) {
-      return '<span class="mention">' + all + '</span>';
+      return '<span class="mention' + (st.my && u === st.my.username ? ' me-mention' : '') + '">' + all + '</span>';
     });
   }
   function renderMsg(m, prepend) {
     var row = document.createElement('div');
-    row.className = 'cm-row' + (m.user.id === st.my.id ? ' me' : '') +
-      (m.mentions && m.mentions.indexOf(st.my.id) >= 0 ? ' at-me' : '');
+    row.className = 'cm-row' + (st.my && m.user.id === st.my.id ? ' me' : '') +
+      (st.my && m.mentions && m.mentions.indexOf(st.my.id) >= 0 ? ' at-me' : '');
     row.dataset.id = m.id;
     row.dataset.uid = m.user.id;
     var acts = '';
@@ -253,7 +274,7 @@
           var b = row.querySelector('.cm-bubble');
           b.classList.add('cm-deleted'); b.innerHTML = '🗑 pesan dihapus';
           Array.prototype.forEach.call(row.querySelectorAll('.cm-acts,.cm-reacts,.cm-reactbar'), function (x) { x.remove(); });
-        } else toast(r.data.error || (r.data.errors && r.data.errors[0].detail) || 'Gagal hapus');
+        } else toast(errMsg(r.data) || 'Gagal hapus');
       });
     });
     var mb = row.querySelector('.mbtn');
@@ -274,7 +295,7 @@
         } else {
           api(API + '/mute/' + uid, 'POST', { minutes: mins }).then(function (r) {
             if (r.ok) { toast('🔇 User di-mute ' + (mins >= 1440 ? '24 jam' : mins >= 60 ? (mins / 60) + ' jam' : mins + ' menit')); refreshFlags(); }
-            else toast((r.data && r.data.error) || 'Gagal mute');
+            else toast(errMsg(r.data) || 'Gagal mute');
           });
         }
         Array.prototype.forEach.call(document.querySelectorAll('.cm-mute-pop.show'), function (p) { p.classList.remove('show'); });
@@ -308,6 +329,35 @@
     });
   }
 
+  // rekonsiliasi ringan tiap ~30 detik: nangkep pesan yang dihapus / reaksi
+  // yang berubah dari user lain (polling `after` cuma ngirim pesan baru).
+  function reconcile() {
+    api(API + '/messages').then(function (r) {
+      if (!r.ok) return;
+      st.my = r.data.my; banner(st.my);
+      els.online.textContent = (r.data.online || 0) + ' online';
+      var atB = nearBottom();
+      r.data.messages.forEach(function (m) {
+        if (m.id > st.lastId) st.lastId = m.id;
+        var row = els.list.querySelector('.cm-row[data-id="' + m.id + '"]');
+        if (!row) { renderMsg(m); return; }
+        var meta = row.querySelector('.cm-meta');
+        var has = meta.querySelector('.cm-muted-ico');
+        if (m.user.muted && !has) {
+          var s = document.createElement('span'); s.className = 'cm-muted-ico'; s.title = 'lagi di-mute'; s.textContent = '🔇';
+          meta.insertBefore(s, meta.lastElementChild);
+        } else if (!m.user.muted && has) has.remove();
+        var b = row.querySelector('.cm-bubble');
+        if (m.deleted && b && !b.classList.contains('cm-deleted')) {
+          b.classList.add('cm-deleted'); b.innerHTML = '🗑 pesan dihapus';
+          Array.prototype.forEach.call(row.querySelectorAll('.cm-acts,.cm-reacts,.cm-reactbar'), function (x) { x.remove(); });
+        }
+        renderReacts(row, m.reactions || {});
+      });
+      if (st.open && atB) scrollTopopBottom();
+    }).catch(function () {});
+  }
+
   // ============ data ============
   function banner(my) {
     if (my.muted_until && new Date(my.muted_until) > new Date()) {
@@ -327,11 +377,13 @@
       var existing = els.list.querySelector('.cm-row[data-id="' + m.id + '"]');
       if (existing) { renderReacts(existing, m.reactions || {}); return; }
       if (!st.open) {
-        st.unread++;
-        if (m.user.id !== st.my.id && m.mentions && m.mentions.indexOf(st.my.id) >= 0) st.mention = true;
-        if (!document.hidden && m.user.id !== st.my.id) beep(m.mentions && m.mentions.indexOf(st.my.id) >= 0 ? [660, 990] : [880]);
-        if (m.user.id !== st.my.id && (document.hidden || !document.hasFocus())) notifyMsg(m);
-        badge();
+        if (m.user.id !== (st.my && st.my.id)) {
+          st.unread++;
+          if (m.mentions && st.my && m.mentions.indexOf(st.my.id) >= 0) st.mention = true;
+          if (!document.hidden) beep(m.mentions && st.my && m.mentions.indexOf(st.my.id) >= 0 ? [660, 990] : [880]);
+          if (document.hidden || !document.hasFocus()) notifyMsg(m);
+          badge();
+        }
         return;
       }
       renderMsg(m);
@@ -353,6 +405,7 @@
       els.online.textContent = (r.data.online || 0) + ' online';
       els.list.innerHTML = '';
       st.lastId = 0;
+      st.oldestId = null;
       if (!r.data.messages.length) {
         els.list.innerHTML = '<div class="cm-empty">Belum ada pesan. Ngobrol dong! 💬</div>';
       } else {
@@ -371,6 +424,8 @@
     if (!st.open && st.ticks % CLOSED_EVERY !== 0) return;
     // tab di background TETAP polling (buat notif), cuma diperlambat kalau chat kebuka
     if (document.hidden && st.open && st.ticks % 2 !== 0) return;
+    // tiap ~30 detik pas chat kebuka, sync ulang biar hapus/reaksi dari user lain ikut
+    if (st.open && st.ticks % 12 === 0) reconcile();
     api(API + '/messages?after=' + st.lastId).then(function (r) {
       if (!r.ok) return;
       st.my = r.data.my; banner(st.my);
@@ -388,8 +443,9 @@
       var empty = els.list.querySelector('.cm-empty'); if (empty) empty.remove();
       r.data.messages.forEach(function (m) {
         if (st.oldestId === null || m.id < st.oldestId) st.oldestId = m.id;
-        renderMsg(m, true);
       });
+      // prepend harus dari yang paling baru ke paling lama, biar urutan akhir tetap naik
+      r.data.messages.slice().reverse().forEach(function (m) { renderMsg(m, true); });
       if (r.data.messages.length < 50) st.oldestId = null;
       els.list.scrollTop = els.list.scrollHeight - prevH + prevT;
     }).catch(function () { st.loadingOld = false; });
@@ -408,7 +464,7 @@
         if (r.data.message.id > st.lastId) st.lastId = r.data.message.id;
         scrollTopopBottom();
       } else {
-        var err = (r.data.error) || (r.data.errors && r.data.errors[0] && r.data.errors[0].detail) || 'Gagal kirim';
+        var err = errMsg(r.data) || 'Gagal kirim';
         toast('⚠️ ' + err);
       }
     }).catch(function () { st.sending = false; toast('⚠️ Koneksi error'); });
@@ -426,19 +482,23 @@
     var m = before.match(/(^|\s)@([A-Za-z0-9._\-]{1,24})$/);
     if (!m) { atList.close(); return; }
     var q = m[2];
-    api(API + '/users?q=' + encodeURIComponent(q)).then(function (r) {
-      if (!r.ok || !r.data.users.length) { atList.close(); return; }
-      atList.items = r.data.users;
-      atList.tokenStart = pos - 1 - q.length; // posisi '@'
-      atList.sel = -1; atList.open = true;
-      els.at.innerHTML = r.data.users.map(function (u, i) {
-        return '<div data-i="' + i + '"><b>@' + esc(u.username) + '</b>' + (u.id === st.my.id ? ' (kamu)' : '') + '</div>';
-      }).join('');
-      Array.prototype.forEach.call(els.at.querySelectorAll('div'), function (d) {
-        d.addEventListener('mousedown', function (e) { e.preventDefault(); atList.pick(parseInt(d.dataset.i, 10)); });
+    // debounce: jangan nembak API tiap ketikan (throttle 30/menit gampang kena)
+    clearTimeout(atCheck._t);
+    atCheck._t = setTimeout(function () {
+      api(API + '/users?q=' + encodeURIComponent(q)).then(function (r) {
+        if (!r.ok || !r.data.users || !r.data.users.length) { atList.close(); return; }
+        atList.items = r.data.users;
+        atList.tokenStart = pos - 1 - q.length; // posisi '@'
+        atList.sel = -1; atList.open = true;
+        els.at.innerHTML = r.data.users.map(function (u, i) {
+          return '<div data-i="' + i + '"><b>@' + esc(u.username) + '</b>' + (st.my && u.id === st.my.id ? ' (kamu)' : '') + '</div>';
+        }).join('');
+        Array.prototype.forEach.call(els.at.querySelectorAll('div'), function (d) {
+          d.addEventListener('mousedown', function (e) { e.preventDefault(); atList.pick(parseInt(d.dataset.i, 10)); });
+        });
+        els.at.classList.add('show');
       });
-      els.at.classList.add('show');
-    });
+    }, 180);
   }
   atList.move = function (dir) {
     this.sel = Math.max(-1, Math.min(this.items.length - 1, this.sel + dir));
@@ -499,6 +559,7 @@
       r.data.messages.forEach(function (m) { if (m.id > st.lastId) st.lastId = m.id; });
     }).catch(function () {});
     setInterval(poll, TICK);
+    window.addEventListener('focus', function () { if (st.open) reconcile(); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

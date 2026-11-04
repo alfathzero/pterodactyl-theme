@@ -17,6 +17,10 @@
   };
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function fmt(t) { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ':' + ('0' + (t % 60)).slice(-2); }
+  function csrf() {
+    var m = document.querySelector('meta[name="csrf-token"]') || document.querySelector('meta[name="_token"]');
+    return m ? m.content : '';
+  }
 
   // ===== IndexedDB buat file lokal =====
   var dbP = null;
@@ -58,7 +62,16 @@
   }
   var urlCache = {}; // key -> objectURL (per sesi)
 
-  function loadLS() { try { return { pl: JSON.parse(localStorage.getItem(LS_PL)) || [], ix: parseInt(localStorage.getItem(LS_IDX) || '-1', 10) }; } catch (e) { return { pl: [], ix: -1 }; } }
+  function loadLS() {
+    try {
+      var pl = JSON.parse(localStorage.getItem(LS_PL)) || [];
+      if (!Array.isArray(pl)) pl = [];
+      pl = pl.filter(function (t) { return t && typeof t.u === 'string' && t.u; });
+      var ix = parseInt(localStorage.getItem(LS_IDX) || '-1', 10);
+      if (isNaN(ix) || ix >= pl.length) ix = pl.length ? 0 : -1;
+      return { pl: pl, ix: ix };
+    } catch (e) { return { pl: [], ix: -1 }; }
+  }
   function save() { try { localStorage.setItem(LS_PL, JSON.stringify(S.tracks)); localStorage.setItem(LS_IDX, String(S.ix)); } catch (e) {} }
 
   var S = { tracks: [], ix: -1, open: false };
@@ -66,21 +79,58 @@
   var audio = new Audio(); audio.volume = 0.9;
   var menu, mainOrb, musicOrb, panel, titleEl, subEl, fillEl, knobEl, tCur, tTot, playBtn, listEl, urlIn, nameIn, fileIn;
 
+  // ===== sync playlist dari server panel (/music/playlist.json) =====
+  // Lagu yang di-upload lewat orb disimpan permanen di public/music + playlist.json,
+  // jadi otomatis muncul di semua device (bukan cuma browser ini).
+  function loadServer() {
+    fetch('/music/playlist.json', { cache: 'no-store' }).then(function (r) {
+      return r.ok ? r.json() : [];
+    }).then(function (list) {
+      if (!Array.isArray(list)) return;
+      var curU = (S.ix >= 0 && S.tracks[S.ix]) ? S.tracks[S.ix].u : null;
+      var local = S.tracks.filter(function (t) { return !t.srv; });
+      var seen = {};
+      local.forEach(function (t) { seen[t.u] = 1; });
+      var srvTracks = [];
+      list.forEach(function (x) {
+        if (!x || !x.file) return;
+        var u = /^https?:\/\//i.test(x.file) ? x.file : '/music/' + encodeURIComponent(x.file);
+        if (seen[u]) return;
+        seen[u] = 1;
+        srvTracks.push({ u: u, n: x.title || x.file, srv: true, f: x.file });
+      });
+      S.tracks = srvTracks.concat(local);
+      var ni = -1;
+      if (curU) {
+        S.tracks.some(function (t, i) { if (t.u === curU) { ni = i; return true; } return false; });
+      }
+      S.ix = ni;
+      if (ni < 0) { audio.pause(); audio.removeAttribute('src'); }
+      save(); renderList(); paint();
+    }).catch(function () {});
+  }
+
   function build() {
     if (document.getElementById('main-orb')) return;
     menu = document.createElement('div'); menu.id = 'orb-menu';
     mainOrb = document.createElement('div'); mainOrb.id = 'main-orb';
-    mainOrb.setAttribute('aria-label', 'Menu');
+    mainOrb.setAttribute('role', 'button');
+    mainOrb.setAttribute('tabindex', '0');
+    mainOrb.setAttribute('aria-label', 'Menu orb');
+    mainOrb.setAttribute('aria-expanded', 'false');
     mainOrb.innerHTML = IC.bubble + IC.x + '<span class="orb-badge" id="badge-main"></span>';
     var chatSub = document.createElement('div');
     chatSub.className = 'orb-sub'; chatSub.id = 'sub-chat'; chatSub.setAttribute('data-tip', 'Chat Room');
+    chatSub.setAttribute('role', 'button'); chatSub.setAttribute('tabindex', '0'); chatSub.setAttribute('aria-label', 'Chat Room');
     chatSub.innerHTML = IC.chat + '<span class="orb-badge" id="badge-chat"></span>';
     var tgSub = document.createElement('a');
     tgSub.className = 'orb-sub'; tgSub.id = 'sub-tg'; tgSub.href = TG_URL;
     tgSub.target = '_blank'; tgSub.rel = 'noopener noreferrer'; tgSub.setAttribute('data-tip', 'Developer ✈️');
+    tgSub.setAttribute('aria-label', 'Telegram developer');
     tgSub.innerHTML = IC.telegram;
     musicOrb = document.createElement('div');
     musicOrb.className = 'orb-sub'; musicOrb.id = 'sub-music'; musicOrb.setAttribute('data-tip', 'Musik 🎵');
+    musicOrb.setAttribute('role', 'button'); musicOrb.setAttribute('tabindex', '0'); musicOrb.setAttribute('aria-label', 'Player musik');
     musicOrb.innerHTML = ICON_LOGO;
     panel = document.createElement('div'); panel.id = 'spot-panel';
     panel.innerHTML =
@@ -113,11 +163,15 @@
     fileIn = document.getElementById('spotFile');
 
     // ---- menu ----
-    mainOrb.addEventListener('click', function (e) {
-      e.stopPropagation();
+    function toggleMenu() {
       var open = menu.classList.toggle('open');
       mainOrb.classList.toggle('open', open);
+      mainOrb.setAttribute('aria-expanded', open ? 'true' : 'false');
       if (!open) closeAllPanels(); // pencet X = rapikan semua: menu + panel musik + chat tutup
+    }
+    mainOrb.addEventListener('click', function (e) { e.stopPropagation(); toggleMenu(); });
+    mainOrb.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); toggleMenu(); }
     });
     document.addEventListener('click', function (e) {
       if (!menu.classList.contains('open')) return;
@@ -125,15 +179,23 @@
       if (t.closest && (t.closest('#orb-menu') || t.closest('#main-orb') || t.closest('.orb-sub') || t.closest('#spot-panel') || t.closest('#chat-win'))) return;
       closeMenu();
     });
-    chatSub.addEventListener('click', function (e) {
-      e.stopPropagation(); closeMenu();
+    function openChat() {
+      closeMenu();
       if (window.PteroChat) window.PteroChat.toggle();
-    });
-    musicOrb.addEventListener('click', function (e) {
-      e.stopPropagation(); closeMenu();
+    }
+    function openMusic() {
+      closeMenu();
       if (!S.open && window.PteroChat) window.PteroChat.close();
       S.open = !S.open; panel.classList.toggle('open', S.open);
       renderList();
+    }
+    chatSub.addEventListener('click', function (e) { e.stopPropagation(); openChat(); });
+    chatSub.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); openChat(); }
+    });
+    musicOrb.addEventListener('click', function (e) { e.stopPropagation(); openMusic(); });
+    musicOrb.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); openMusic(); }
     });
 
     playBtn.addEventListener('click', toggle);
@@ -169,6 +231,7 @@
     if (!menu) return;
     menu.classList.remove('open');
     mainOrb.classList.remove('open');
+    mainOrb.setAttribute('aria-expanded', 'false');
   }
   function closeAllPanels() {
     if (S.open) { S.open = false; panel.classList.remove('open'); }
@@ -196,7 +259,7 @@
   function paint() {
     var t = cur();
     titleEl.textContent = t ? t.n : 'Nggak ada lagu';
-    subEl.textContent = t ? (t.u.indexOf('idb:') === 0 ? '📱 file lokal' : t.u.replace(/^https?:\/\//, '').slice(0, 46)) : (S.tracks.length ? 'pilih lagu dari playlist 👇' : 'tambahin lagu dulu di bawah 👇');
+    subEl.textContent = t ? (t.u.indexOf('idb:') === 0 ? '📱 file lokal' : (t.srv ? '☁️ playlist panel' : t.u.replace(/^https?:\/\//, '').slice(0, 46))) : (S.tracks.length ? 'pilih lagu dari playlist 👇' : 'tambahin lagu dulu di bawah 👇');
     var p = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
     fillEl.style.width = p + '%'; knobEl.style.left = p + '%';
     tCur.textContent = fmt(audio.currentTime); tTot.textContent = fmt(audio.duration);
@@ -240,7 +303,9 @@
     var u = (urlIn.value || '').trim(), n = (nameIn.value || '').trim();
     if (!u) { urlIn.focus(); return; }
     if (!/^https?:\/\//i.test(u) && !/^data:audio\//i.test(u)) u = 'https://' + u;
-    S.tracks.push({ u: u, n: n || decodeURIComponent(u.split('/').pop().split('?')[0]) || 'Lagu ' + (S.tracks.length + 1) });
+    var baseName = '';
+    try { baseName = decodeURIComponent(u.split('/').pop().split('?')[0]); } catch (e) { baseName = u.split('/').pop().split('?')[0]; }
+    S.tracks.push({ u: u, n: n || baseName || 'Lagu ' + (S.tracks.length + 1) });
     save(); urlIn.value = ''; nameIn.value = '';
     if (S.ix < 0) loadTrack(S.tracks.length - 1, false);
     renderList(); paint();
@@ -248,27 +313,57 @@
   function addFiles() {
     var files = Array.prototype.slice.call(fileIn.files || []);
     if (!files.length) return;
-    titleEl.textContent = '⏳ nyimpen ' + files.length + ' lagu…';
+    titleEl.textContent = '⏳ ngunggah ' + files.length + ' lagu…';
     var chain = Promise.resolve();
     files.forEach(function (f, k) {
       chain = chain.then(function () {
-        var key = 'f' + Date.now() + '_' + k;
-        return idbPut(key, f).then(function () {
-          urlCache[key] = URL.createObjectURL(f);
-          S.tracks.push({ u: 'idb:' + key, n: (nameIn.value || '').trim() || f.name.replace(/\.[^.]+$/, '') });
+        var nm = (nameIn.value || '').trim() || f.name.replace(/\.[^.]+$/, '');
+        var fd = new FormData();
+        fd.append('music', f);
+        fd.append('title', nm);
+        // upload ke server panel biar permanen & sinkron semua device;
+        // kalau bukan root admin / server nolak -> fallback IndexedDB lokal
+        return fetch('/music/upload', {
+          method: 'POST',
+          headers: { 'X-CSRF-TOKEN': csrf(), 'X-Requested-With': 'XMLHttpRequest' },
+          body: fd,
+        }).then(function (r) {
+          return r.ok ? r.json() : Promise.reject(r);
+        }).then(function (res) {
+          if (!res || !res.file) throw new Error('respons upload ga valid');
+          var u = '/music/' + encodeURIComponent(res.file);
+          if (!S.tracks.some(function (t) { return t.u === u; })) {
+            S.tracks.push({ u: u, n: res.title || nm, srv: true, f: res.file });
+          }
+        }).catch(function () {
+          var key = 'f' + Date.now() + '_' + k;
+          return idbPut(key, f).then(function () {
+            urlCache[key] = URL.createObjectURL(f);
+            S.tracks.push({ u: 'idb:' + key, n: nm });
+          }).catch(function () {
+            titleEl.textContent = '⚠️ Gagal nyimpen ' + f.name;
+          });
         });
       });
     });
     chain.then(function () {
       fileIn.value = ''; nameIn.value = '';
       save();
-      if (S.ix < 0) loadTrack(S.tracks.length - 1, false);
+      if (S.ix < 0 && S.tracks.length) loadTrack(S.tracks.length - 1, false);
       renderList(); paint();
     });
   }
   function delTrack(i, ev) {
     ev.stopPropagation();
     var t = S.tracks[i];
+    // lagu playlist panel -> hapus file + entry playlist di server juga
+    if (t && t.srv) {
+      var f = t.f || decodeURIComponent(t.u.split('/').pop());
+      fetch('/music/' + encodeURIComponent(f), {
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': csrf(), 'X-Requested-With': 'XMLHttpRequest' },
+      }).catch(function () {});
+    }
     if (t && t.u.indexOf('idb:') === 0) idbDel(t.u.slice(4));
     S.tracks.splice(i, 1);
     if (S.ix === i) { audio.pause(); audio.removeAttribute('src'); S.ix = -1; }
@@ -279,7 +374,7 @@
     if (!listEl) return;
     if (!S.tracks.length) { listEl.innerHTML = '<div class="spot-empty">Playlist kosong 🎧</div>'; return; }
     listEl.innerHTML = S.tracks.map(function (t, i) {
-      return '<div class="spot-item' + (i === S.ix ? ' cur' : '') + '" data-i="' + i + '"><span class="n">' + (i === S.ix && !audio.paused ? '🎵 ' : '') + (t.u.indexOf('idb:') === 0 ? '📱 ' : '') + esc(t.n) + '</span><span class="del" data-d="' + i + '">✕</span></div>';
+      return '<div class="spot-item' + (i === S.ix ? ' cur' : '') + '" data-i="' + i + '"><span class="n">' + (i === S.ix && !audio.paused ? '🎵 ' : '') + (t.u.indexOf('idb:') === 0 ? '📱 ' : (t.srv ? '☁️ ' : '')) + esc(t.n) + '</span><span class="del" data-d="' + i + '">✕</span></div>';
     }).join('');
     Array.prototype.forEach.call(listEl.querySelectorAll('.spot-item'), function (row) {
       row.addEventListener('click', function () { loadTrack(parseInt(row.dataset.i, 10), true); });
@@ -291,7 +386,7 @@
   // re-render tick biar indikator 🎵 akurat tanpa event
   setInterval(function () { if (document.getElementById('main-orb') && panel && panel.classList.contains('open')) renderList(); }, 2000);
 
-  function init() { build(); }
+  function init() { build(); loadServer(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();

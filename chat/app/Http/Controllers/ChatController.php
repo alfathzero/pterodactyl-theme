@@ -172,7 +172,10 @@ class ChatController extends Controller
         if (!$user->root_admin) {
             return new JsonResponse(['error' => 'Admin only'], 403);
         }
-        $data = $request->validate(['minutes' => ['required', 'integer']]);
+        $data = $request->validate([
+            'minutes' => ['required', 'integer'],
+            'reason' => ['nullable', 'string', 'max:190'],
+        ]);
         if (!in_array((int) $data['minutes'], self::MUTE_MINUTES, true)) {
             return new JsonResponse(['error' => 'Durasi ga valid'], 422);
         }

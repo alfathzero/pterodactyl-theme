@@ -34,8 +34,9 @@ if [ "${ans,,}" = "y" ]; then
         \Schema::dropIfExists('chat_reactions');
         \Schema::dropIfExists('chat_mutes');
         \Schema::dropIfExists('chat_messages');
-        echo '  tabel chat dihapus';" 2>/dev/null \
-    || echo "[!] Drop otomatis gagal — hapus manual tabel chat_messages/chat_reactions/chat_mutes"
+        \DB::table('migrations')->where('migration', 'like', '%create_chat_room_tables%')->delete();
+        echo '  tabel chat dihapus + catatan migration dibersihin';" 2>/dev/null \
+    || echo "[!] Drop otomatis gagal — hapus manual tabel chat_messages/chat_reactions/chat_mutes + baris migration create_chat_room_tables"
 else
   echo "[*] Tabel chat_* DIBIARIN (pesan ga hilang)."
 fi

@@ -36,6 +36,8 @@
 #orb-menu.open #sub-chat { transition-delay: 0.14s; }
 .orb-sub:hover { filter: brightness(1.15); transform: scale(1.1); }
 .orb-sub:active { transform: scale(0.92); }
+#orb-menu.open .orb-sub:hover { transform: scale(1.1); }
+#orb-menu.open .orb-sub:active { transform: scale(0.92); }
 #sub-chat { bottom: 204px; background: linear-gradient(150deg, #818cf8, #4f46e5); box-shadow: 0 6px 20px rgba(0,0,0,.5), 0 0 16px rgba(99,102,241,.5); }
 #sub-tg { bottom: 148px; background: radial-gradient(circle at 30% 25%, #5ecbff, #2AABEE 55%, #1c86c2); }
 #sub-music { bottom: 92px; background: radial-gradient(circle at 30% 25%, #3bd16f, #1db954 55%, #0e7a34); }
