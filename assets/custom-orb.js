@@ -83,7 +83,7 @@
   // Lagu yang di-upload lewat orb disimpan permanen di public/music + playlist.json,
   // jadi otomatis muncul di semua device (bukan cuma browser ini).
   function loadServer() {
-    fetch('/music/playlist.json', { cache: 'no-store' }).then(function (r) {
+    fetch('/music/playlist', { cache: 'no-store' }).then(function (r) {
       return r.ok ? r.json() : [];
     }).then(function (list) {
       if (!Array.isArray(list)) return;
@@ -94,7 +94,7 @@
       var srvTracks = [];
       list.forEach(function (x) {
         if (!x || !x.file) return;
-        var u = /^https?:\/\//i.test(x.file) ? x.file : '/music/' + encodeURIComponent(x.file);
+        var u = /^https?:\/\//i.test(x.file) ? x.file : '/music/stream/' + encodeURIComponent(x.file);
         if (seen[u]) return;
         seen[u] = 1;
         srvTracks.push({ u: u, n: x.title || x.file, srv: true, f: x.file });
@@ -259,7 +259,7 @@
   function paint() {
     var t = cur();
     titleEl.textContent = t ? t.n : 'Nggak ada lagu';
-    subEl.textContent = t ? (t.u.indexOf('idb:') === 0 ? '📱 file lokal' : (t.srv ? '☁️ playlist panel' : t.u.replace(/^https?:\/\//, '').slice(0, 46))) : (S.tracks.length ? 'pilih lagu dari playlist 👇' : 'tambahin lagu dulu di bawah 👇');
+    subEl.textContent = t ? (t.u.indexOf('idb:') === 0 ? '📱 file lokal' : (t.srv ? '☁️ playlist akun' : t.u.replace(/^https?:\/\//, '').slice(0, 46))) : (S.tracks.length ? 'pilih lagu dari playlist 👇' : 'tambahin lagu dulu di bawah 👇');
     var p = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
     fillEl.style.width = p + '%'; knobEl.style.left = p + '%';
     tCur.textContent = fmt(audio.currentTime); tTot.textContent = fmt(audio.duration);
@@ -331,7 +331,7 @@
           return r.ok ? r.json() : Promise.reject(r);
         }).then(function (res) {
           if (!res || !res.file) throw new Error('respons upload ga valid');
-          var u = '/music/' + encodeURIComponent(res.file);
+          var u = '/music/stream/' + encodeURIComponent(res.file);
           if (!S.tracks.some(function (t) { return t.u === u; })) {
             S.tracks.push({ u: u, n: res.title || nm, srv: true, f: res.file });
           }
