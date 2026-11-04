@@ -48,7 +48,6 @@
     if (!b2) { b2 = document.createElement('b'); bar.appendChild(b2); }
     b2.textContent = label != null ? label : pct.toFixed(0) + '%';
   }
-  var lastServer = '';
   function tick() {
     tagBoxes();
     if (!onServer()) return;
@@ -70,15 +69,19 @@
       })
       .catch(function () {});
   }
-  var limitsCache = {};
+  var limitsCache = {}, limitsPending = {}, limitsRetry = {};
   function fetchLimits(id) {
-    if (limitsCache[id] || lastServer === id + '_ok') return;
+    if (limitsCache[id] || limitsPending[id]) return;
+    if (limitsRetry[id] && Date.now() < limitsRetry[id]) return;
+    limitsPending[id] = true;
     fetch('/api/client/servers/' + id, { credentials: 'same-origin', headers: { Accept: 'application/json' } })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (j && j.attributes && j.attributes.limits) limitsCache[id] = j.attributes.limits;
+        else limitsRetry[id] = Date.now() + 60000;
       })
-      .catch(function () {});
+      .catch(function () { limitsRetry[id] = Date.now() + 60000; })
+      .then(function () { limitsPending[id] = false; });
   }
   function init() {
     setInterval(tick, 3000);

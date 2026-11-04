@@ -142,7 +142,7 @@
 @section('scripts')
     @parent
     <script src="/assets/custom-island.js?v=7"></script>
-    <script src="/assets/custom-stats.js?v=1"></script>
+    <script src="/assets/custom-stats.js?v=2"></script>
     <script src="/assets/custom-orb.js?v=8"></script>
     <script src="/assets/custom-chat.js?v=2"></script>
 @endsection
