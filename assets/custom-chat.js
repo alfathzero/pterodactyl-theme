@@ -473,7 +473,7 @@
   // ============ @mention autocomplete ============
   var atList = {
     open: false, sel: -1, items: [], tokenStart: -1,
-    close: function () { this.open = false; this.sel = -1; els.at.classList.remove('show'); }
+    close: function () { this.open = false; this.sel = -1; clearTimeout(atCheck._t); els.at.classList.remove('show'); }
   };
   function atCheck() {
     if (!st.open) return;

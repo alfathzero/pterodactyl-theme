@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="/assets/custom-island.css?v=7">
     <link rel="stylesheet" href="/assets/custom-anim.css?v=12">
     <link rel="stylesheet" href="/assets/custom-orb.css?v=7">
-    <link rel="stylesheet" href="/assets/custom-chat.css?v=2">
+    <link rel="stylesheet" href="/assets/custom-chat.css?v=3">
 @endsection
 
 @section('container')
@@ -144,5 +144,5 @@
     <script src="/assets/custom-island.js?v=7"></script>
     <script src="/assets/custom-stats.js?v=2"></script>
     <script src="/assets/custom-orb.js?v=8"></script>
-    <script src="/assets/custom-chat.js?v=2"></script>
+    <script src="/assets/custom-chat.js?v=3"></script>
 @endsection
