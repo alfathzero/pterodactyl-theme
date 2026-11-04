@@ -88,7 +88,13 @@
     }).then(function (list) {
       if (!Array.isArray(list)) return;
       var curU = (S.ix >= 0 && S.tracks[S.ix]) ? S.tracks[S.ix].u : null;
-      var local = S.tracks.filter(function (t) { return !t.srv; });
+      // simpan hanya track yang memang lokal browser (IndexedDB / URL eksternal).
+      // entry lama yang nunjuk ke /music/... dibuang supaya nggak dobel / zombie.
+      var local = S.tracks.filter(function (t) {
+        if (t.srv) return false;
+        if (t.u.indexOf('idb:') === 0) return true;
+        return /^https?:\/\//i.test(t.u) && t.u.indexOf('/music/') === -1;
+      });
       var seen = {};
       local.forEach(function (t) { seen[t.u] = 1; });
       var srvTracks = [];
@@ -321,28 +327,25 @@
         var fd = new FormData();
         fd.append('music', f);
         fd.append('title', nm);
-        // upload ke server panel biar permanen & sinkron semua device;
-        // kalau bukan root admin / server nolak -> fallback IndexedDB lokal
+        // upload ke server panel biar permanen & sinkron semua device
         return fetch('/music/upload', {
           method: 'POST',
-          headers: { 'X-CSRF-TOKEN': csrf(), 'X-Requested-With': 'XMLHttpRequest' },
+          headers: { 'X-CSRF-TOKEN': csrf(), 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
           body: fd,
         }).then(function (r) {
-          return r.ok ? r.json() : Promise.reject(r);
+          return r.json().catch(function () { return {}; }).then(function (j) {
+            if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+            return j;
+          });
         }).then(function (res) {
           if (!res || !res.file) throw new Error('respons upload ga valid');
           var u = '/music/stream/' + encodeURIComponent(res.file);
           if (!S.tracks.some(function (t) { return t.u === u; })) {
             S.tracks.push({ u: u, n: res.title || nm, srv: true, f: res.file });
           }
-        }).catch(function () {
-          var key = 'f' + Date.now() + '_' + k;
-          return idbPut(key, f).then(function () {
-            urlCache[key] = URL.createObjectURL(f);
-            S.tracks.push({ u: 'idb:' + key, n: nm });
-          }).catch(function () {
-            titleEl.textContent = '⚠️ Gagal nyimpen ' + f.name;
-          });
+        }).catch(function (e) {
+          // jangan diam-diam fallback ke IndexedDB (bikin list numpuk & cuma lokal)
+          titleEl.textContent = '⚠️ Gagal upload: ' + (e && e.message ? e.message : 'coba refresh / login ulang');
         });
       });
     });
@@ -356,19 +359,40 @@
   function delTrack(i, ev) {
     ev.stopPropagation();
     var t = S.tracks[i];
-    // lagu playlist panel -> hapus file + entry playlist di server juga
-    if (t && t.srv) {
+    if (!t) return;
+
+    function removeLocal() {
+      var idx = S.tracks.indexOf(t);
+      if (idx < 0) return;
+      S.tracks.splice(idx, 1);
+      if (S.ix === idx) { audio.pause(); audio.removeAttribute('src'); S.ix = -1; }
+      else if (idx < S.ix) S.ix--;
+      save(); renderList(); paint();
+    }
+
+    var isSrv = t.srv || t.u.indexOf('/music/stream/') === 0;
+    if (isSrv) {
       var f = t.f || decodeURIComponent(t.u.split('/').pop());
+      removeLocal(); // optimistis, tapi dibalikin kalau server nolak
       fetch('/music/' + encodeURIComponent(f), {
         method: 'DELETE',
-        headers: { 'X-CSRF-TOKEN': csrf(), 'X-Requested-With': 'XMLHttpRequest' },
-      }).catch(function () {});
+        headers: { 'X-CSRF-TOKEN': csrf(), 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+      }).then(function (r) {
+        var ct = r.headers.get('content-type') || '';
+        if (r.ok && ct.indexOf('application/json') !== -1) return null;
+        // 419/401/redirect ke login bukan sukses -> jangan dianggap kehapus
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          throw new Error(j.error || ('HTTP ' + r.status));
+        });
+      }).catch(function (e) {
+        titleEl.textContent = '⚠️ Gagal hapus: ' + (e && e.message ? e.message : 'coba refresh');
+        loadServer(); // selaraskan lagi sama server biar nggak "balik sendiri"
+      });
+      return;
     }
-    if (t && t.u.indexOf('idb:') === 0) idbDel(t.u.slice(4));
-    S.tracks.splice(i, 1);
-    if (S.ix === i) { audio.pause(); audio.removeAttribute('src'); S.ix = -1; }
-    else if (i < S.ix) S.ix--;
-    save(); renderList(); paint();
+
+    if (t.u.indexOf('idb:') === 0) idbDel(t.u.slice(4));
+    removeLocal();
   }
   function renderList() {
     if (!listEl) return;
