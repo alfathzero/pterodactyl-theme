@@ -143,6 +143,6 @@
     @parent
     <script src="/assets/custom-island.js?v=7"></script>
     <script src="/assets/custom-stats.js?v=2"></script>
-    <script src="/assets/custom-orb.js?v=10"></script>
+    <script src="/assets/custom-orb.js?v=11"></script>
     <script src="/assets/custom-chat.js?v=3"></script>
 @endsection

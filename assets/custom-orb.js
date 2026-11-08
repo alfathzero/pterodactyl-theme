@@ -1,7 +1,7 @@
 // Orb menu (chat + telegram + musik) — player MP3/IndexedDB + trigger chat window
 (function () {
   var LS_PL = 'spotPlaylist', LS_IDX = 'spotIndex';
-  var TG_URL = 'https://t.me/RAVKITTY';
+  var TG_URL = 'https://t.me/ALFA21L';
   var ICON_LOGO = '<svg viewBox="0 0 24 24" fill="#07110b"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.5 17.3c-.2.4-.7.5-1 .3-2.9-1.8-6.5-2.2-10.8-1.2-.4.1-.8-.1-.9-.5-.1-.4.1-.8.5-.9 4.6-1 8.6-.6 11.9 1.4.3.2.4.7.3 1zm1.5-3.9c-.3.5-.8.6-1.2.4-3.3-2-8.3-2.6-12.2-1.4-.5.1-1-.1-1.2-.6-.1-.5.1-1 .6-1.2 4.4-1.3 10-.7 13.8 1.6.4.2.6.8.2 1.2zm.1-4C15.7 9 8.2 8.8 4.2 10c-.6.2-1.3-.2-1.4-.8-.2-.6.2-1.3.8-1.4 4.6-1.4 13-1.1 17.5 1.6.5.4.7 1.1.3 1.6-.4.5-1.1.6-1.8.4z"/></svg>';
   var IC = {
     prev: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zm12 0v14l-9-7z"/></svg>',
