@@ -28,7 +28,12 @@ class CollectLeaderboardCommand extends Command
 
         try {
             $started = microtime(true);
-            $servers = Server::withoutGlobalScopes()->with('node')->get();
+            $servers = Server::withoutGlobalScopes()
+                ->where(function ($query) {
+                    $query->whereNull('status')->orWhere('status', '!=', Server::STATUS_SUSPENDED);
+                })
+                ->with('node')
+                ->get();
             $concurrency = max(1, (int) $this->option('concurrency'));
             $rows = [];
             $errors = 0;
