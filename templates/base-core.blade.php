@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/assets/custom-anim.css?v=12">
     <link rel="stylesheet" href="/assets/custom-orb.css?v=7">
     <link rel="stylesheet" href="/assets/custom-chat.css?v=3">
+    <link rel="stylesheet" href="/assets/custom-leaderboard.css?v=1">
 @endsection
 
 @section('container')
@@ -145,4 +146,5 @@
     <script src="/assets/custom-stats.js?v=2"></script>
     <script src="/assets/custom-orb.js?v=11"></script>
     <script src="/assets/custom-chat.js?v=3"></script>
+    <script src="/assets/custom-leaderboard.js?v=1"></script>
 @endsection

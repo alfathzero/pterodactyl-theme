@@ -11,6 +11,8 @@
 #
 #  Skip backend musik (tema CSS/JS aja):
 #     SKIP_MUSIC=1 ./install.sh
+#  Skip leaderboard:
+#     SKIP_LEADERBOARD=1 ./install.sh
 # ============================================================
 set -euo pipefail
 
@@ -24,13 +26,13 @@ echo "[*] Panel : $PANEL_DIR"
 echo "[*] Theme : $REPO_DIR"
 
 # 1. assets
-echo "[1/6] Copy assets (css/js)..."
-for f in custom-auth-3d.css custom-auth-3d.js custom-island.css custom-island.js custom-stats.js custom-anim.css custom-orb.css custom-orb.js custom-chat.css custom-chat.js; do
+echo "[1/7] Copy assets (css/js)..."
+for f in custom-auth-3d.css custom-auth-3d.js custom-island.css custom-island.js custom-stats.js custom-anim.css custom-orb.css custom-orb.js custom-chat.css custom-chat.js custom-leaderboard.css custom-leaderboard.js; do
   cp "$REPO_DIR/assets/$f" "$PANEL_DIR/public/assets/$f"
 done
 
 # 2. blade templates (backup yang lama duluan)
-echo "[2/6] Deploy blade templates..."
+echo "[2/7] Deploy blade templates..."
 BASE="$PANEL_DIR/resources/views/templates/base/core.blade.php"
 AUTH="$PANEL_DIR/resources/views/templates/auth/core.blade.php"
 [ -f "$BASE.bak-theme" ] || cp "$BASE" "$BASE.bak-theme"
@@ -40,32 +42,42 @@ cp "$REPO_DIR/templates/auth-core.blade.php" "$AUTH"
 
 # 3. orb di halaman admin (patch idempotent, ga nimpa layout)
 if [ -x "$REPO_DIR/admin-patch.sh" ]; then
-  echo "[3/6] Patch orb untuk halaman /admin..."
+  echo "[3/7] Patch orb untuk halaman /admin..."
   "$REPO_DIR/admin-patch.sh" || echo "[!] Patch admin gagal, lanjut (orb tetap jalan di halaman user)"
 else
-  echo "[3/6] admin-patch.sh ga ada, skip"
+  echo "[3/7] admin-patch.sh ga ada, skip"
 fi
 
 # 4. backend musik per akun (controller + route + storage privat)
 if [ "${SKIP_MUSIC:-0}" = "1" ]; then
-  echo "[4/6] SKIP_MUSIC=1 — backend musik dilewati"
+  echo "[4/7] SKIP_MUSIC=1 — backend musik dilewati"
 elif [ -x "$REPO_DIR/music-install.sh" ]; then
-  echo "[4/6] Pasang backend orb musik per akun..."
+  echo "[4/7] Pasang backend orb musik per akun..."
   "$REPO_DIR/music-install.sh"
 else
-  echo "[4/6] music-install.sh ga ada, skip"
+  echo "[4/7] music-install.sh ga ada, skip"
 fi
 
-# 5. clear cache view
-echo "[5/6] Clear view cache..."
+# 5. leaderboard resource server (collector + route + cron)
+if [ "${SKIP_LEADERBOARD:-0}" = "1" ]; then
+  echo "[5/7] SKIP_LEADERBOARD=1 — leaderboard dilewati"
+elif [ -x "$REPO_DIR/leaderboard-install.sh" ]; then
+  echo "[5/7] Pasang leaderboard resource server..."
+  "$REPO_DIR/leaderboard-install.sh"
+else
+  echo "[5/7] leaderboard-install.sh ga ada, skip"
+fi
+
+# 6. clear cache view
+echo "[6/7] Clear view cache..."
 sudo -u www-data php "$PANEL_DIR/artisan" view:clear 2>/dev/null \
   || php "$PANEL_DIR/artisan" view:clear 2>/dev/null \
   || sudo -u www-data php "$PANEL_DIR/artisan" view:clear --no-interaction
 
-# 6. permissions
-echo "[6/6] Fix permissions..."
+# 7. permissions
+echo "[7/7] Fix permissions..."
 WEBUSER="www-data"
-[ -d /usr/share/nginx ] && WEBUSER="nginx"
+id -u nginx >/dev/null 2>&1 && WEBUSER="nginx"
 chown -R "$WEBUSER:$WEBUSER" "$PANEL_DIR/resources/views" "$PANEL_DIR/storage" "$PANEL_DIR/bootstrap/cache" "$PANEL_DIR/public/assets" 2>/dev/null || true
 
 echo ""

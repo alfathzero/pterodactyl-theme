@@ -65,7 +65,7 @@ rm -f "$PANEL_DIR/app/Http/Controllers/ChatController.php" \
       "$PANEL_DIR/public/sw-notify.js" \
       "$PANEL_DIR/routes/base.php.bak-chat"
 
-WEBUSER="www-data"; [ -d /usr/share/nginx ] && WEBUSER="nginx"
+WEBUSER="www-data"; id -u nginx >/dev/null 2>&1 && WEBUSER="nginx"
 sudo -u www-data php "$PANEL_DIR/artisan" route:clear 2>/dev/null || php "$PANEL_DIR/artisan" route:clear
 php "$PANEL_DIR/artisan" config:clear >/dev/null 2>&1 || true
 php "$PANEL_DIR/artisan" view:clear >/dev/null 2>&1 || true

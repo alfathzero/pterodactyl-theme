@@ -118,7 +118,7 @@ fi
 # 6. clear cache + permission
 echo "[6/6] Clear cache + permission..."
 WEBUSER="www-data"
-[ -d /usr/share/nginx ] && WEBUSER="nginx"
+id -u nginx >/dev/null 2>&1 && WEBUSER="nginx"
 chown -R "$WEBUSER:$WEBUSER" "$PANEL_DIR/app/Http/Controllers/Music" "$PANEL_DIR/routes" "$PRIV" 2>/dev/null || true
 sudo -u "$WEBUSER" php "$PANEL_DIR/artisan" route:clear 2>/dev/null || php "$PANEL_DIR/artisan" route:clear 2>/dev/null || true
 sudo -u "$WEBUSER" php "$PANEL_DIR/artisan" config:clear 2>/dev/null || true

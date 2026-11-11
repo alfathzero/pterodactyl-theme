@@ -38,7 +38,7 @@ src = re.sub(r"[ \t]*<!-- THEME-ADMIN-JS START.*?-->.*?<!-- THEME-ADMIN-JS END -
 open(p, "w").write(src)
 print("[*] Patch orb admin dicabut")
 PYEOF
-  WEBUSER="www-data"; [ -d /usr/share/nginx ] && WEBUSER="nginx"
+  WEBUSER="www-data"; id -u nginx >/dev/null 2>&1 && WEBUSER="nginx"
   sudo -u "$WEBUSER" php "$PANEL_DIR/artisan" view:clear 2>/dev/null || php "$PANEL_DIR/artisan" view:clear 2>/dev/null || true
   echo "[✓] Selesai."
   exit 0
@@ -88,7 +88,7 @@ else:
     print("[*] Patch orb admin udah ada, skip")
 PYEOF
 
-WEBUSER="www-data"; [ -d /usr/share/nginx ] && WEBUSER="nginx"
+WEBUSER="www-data"; id -u nginx >/dev/null 2>&1 && WEBUSER="nginx"
 chown "$WEBUSER:$WEBUSER" "$ADMIN" 2>/dev/null || true
 sudo -u "$WEBUSER" php "$PANEL_DIR/artisan" view:clear 2>/dev/null || php "$PANEL_DIR/artisan" view:clear 2>/dev/null || true
 echo "[✓] Orb sekarang muncul juga di /admin."

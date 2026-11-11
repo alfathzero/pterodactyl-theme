@@ -92,7 +92,7 @@ sudo -u www-data php "$PANEL_DIR/artisan" route:clear 2>/dev/null || php "$PANEL
 sudo -u www-data php "$PANEL_DIR/artisan" config:clear 2>/dev/null || true
 sudo -u www-data php "$PANEL_DIR/artisan" view:clear 2>/dev/null || true
 WEBUSER="www-data"
-[ -d /usr/share/nginx ] && WEBUSER="nginx"
+id -u nginx >/dev/null 2>&1 && WEBUSER="nginx"
 chown -R "$WEBUSER:$WEBUSER" "$PANEL_DIR/app" "$PANEL_DIR/routes" "$PANEL_DIR/database/migrations" "$PANEL_DIR/storage" "$PANEL_DIR/bootstrap/cache" "$PANEL_DIR/public/assets" 2>/dev/null || true
 
 echo ""

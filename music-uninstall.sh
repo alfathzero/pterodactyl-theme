@@ -51,7 +51,7 @@ fi
 
 # 4. cache + permission
 WEBUSER="www-data"
-[ -d /usr/share/nginx ] && WEBUSER="nginx"
+id -u nginx >/dev/null 2>&1 && WEBUSER="nginx"
 sudo -u "$WEBUSER" php "$PANEL_DIR/artisan" route:clear 2>/dev/null || php "$PANEL_DIR/artisan" route:clear 2>/dev/null || true
 sudo -u "$WEBUSER" php "$PANEL_DIR/artisan" view:clear 2>/dev/null || true
 echo "[4/4] Cache dibersihkan"
