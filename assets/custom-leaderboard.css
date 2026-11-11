@@ -180,9 +180,10 @@
   padding: 9px 10px;
   border-radius: 12px;
   border: 1px solid transparent;
-  cursor: pointer;
+  cursor: default;
   transition: background 0.13s ease, border-color 0.13s ease;
 }
+.lb-row.owned { cursor: pointer; }
 .lb-row:hover { background: rgba(148, 163, 184, 0.09); border-color: rgba(148, 163, 184, 0.16); }
 .lb-rank {
   text-align: center;

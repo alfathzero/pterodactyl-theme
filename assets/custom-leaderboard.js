@@ -72,7 +72,8 @@
   function rowHtml(s, i, max) {
     var medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
     var meta = esc(s.node || 'node') + ' • uptime ' + esc(fmtUptime(s.uptime));
-    return '<div class="lb-row" data-id="' + esc(s.id) + '" role="button" tabindex="0">' +
+    return '<div class="lb-row' + (s.owned ? ' owned' : '') + '" data-id="' + esc(s.id) + '"' +
+      (s.owned ? ' role="button" tabindex="0" title="Buka server ini"' : '') + '>' +
       '<div class="lb-rank">' + medal + '</div>' +
       '<div><div class="lb-name">' + esc(s.name) + '</div><div class="lb-meta">' + meta + '</div></div>' +
       '<div class="lb-val">' + valueHtml(s) + '</div>' +
@@ -103,7 +104,7 @@
       ? servers.map(function (s, i) { return rowHtml(s, i, max); }).join('')
       : '<div class="lb-empty">Nggak ada server online yang cocok.</div>';
 
-    Array.prototype.forEach.call(listEl.querySelectorAll('.lb-row'), function (row) {
+    Array.prototype.forEach.call(listEl.querySelectorAll('.lb-row.owned'), function (row) {
       function go() { window.location.href = '/server/' + encodeURIComponent(row.dataset.id); }
       row.addEventListener('click', go);
       row.addEventListener('keydown', function (e) {

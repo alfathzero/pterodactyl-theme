@@ -47,12 +47,12 @@ changed = []
 if "custom-leaderboard.css" not in src:
     anchor = '<link rel="stylesheet" href="/assets/custom-chat.css?v=3">'
     if anchor in src:
-        src = src.replace(anchor, anchor + '\n    <link rel="stylesheet" href="/assets/custom-leaderboard.css?v=1">', 1)
+        src = src.replace(anchor, anchor + '\n    <link rel="stylesheet" href="/assets/custom-leaderboard.css?v=2">', 1)
         changed.append("CSS")
 if "custom-leaderboard.js" not in src:
     anchor = '<script src="/assets/custom-chat.js?v=3"></script>'
     if anchor in src:
-        src = src.replace(anchor, anchor + '\n    <script src="/assets/custom-leaderboard.js?v=1"></script>', 1)
+        src = src.replace(anchor, anchor + '\n    <script src="/assets/custom-leaderboard.js?v=2"></script>', 1)
         changed.append("JS")
 if changed:
     open(p, "w").write(src)
