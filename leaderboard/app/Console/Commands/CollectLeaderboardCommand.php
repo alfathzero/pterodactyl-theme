@@ -89,7 +89,8 @@ class CollectLeaderboardCommand extends Command
                             'disk_limit' => $diskLimit,
                             'memory_pct' => $memoryLimit > 0 ? round($memory / ($memoryLimit * 1048576) * 100, 1) : null,
                             'disk_pct' => $diskLimit > 0 ? round($disk / ($diskLimit * 1048576) * 100, 1) : null,
-                            'uptime' => (int) ($util['uptime'] ?? 0),
+                            // Wings ngirim uptime dalam milliseconds, simpan sebagai detik
+                            'uptime' => (int) round(((float) ($util['uptime'] ?? 0)) / 1000),
                         ];
                     },
                     'rejected' => function () use (&$errors) {

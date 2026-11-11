@@ -7,7 +7,10 @@ namespace Pterodactyl\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Str;
+use ParagonIE\ConstantTime\Base32;
 use Pterodactyl\Models\Server;
+use Ramsey\Uuid\Uuid;
 
 class LeaderboardController extends Controller
 {
@@ -44,16 +47,30 @@ class LeaderboardController extends Controller
 
         // tandai server milik user biar baris cuma bisa diklik kalau punya akses
         $user = $request->user();
-        $ids = array_values(array_filter(array_map(static fn (array $s) => $s['id'] ?? null, $servers)));
-        $owners = $ids
+
+        // identifier = base32(uuid) dengan prefix "serv_", bukan kolom DB
+        $idToUuid = [];
+        foreach ($servers as $server) {
+            $id = (string) ($server['id'] ?? '');
+            if (!str_starts_with($id, 'serv_')) {
+                continue;
+            }
+            $bytes = @Base32::decode(Str::replaceFirst('serv_', '', $id));
+            if (!empty($bytes)) {
+                $idToUuid[$id] = Uuid::fromBytes($bytes)->toString();
+            }
+        }
+
+        $owners = $idToUuid
             ? Server::withoutGlobalScopes()
-                ->whereIn('uuidShort', $ids)
-                ->pluck('owner_id', 'uuidShort')
+                ->whereIn('uuid', array_values($idToUuid))
+                ->pluck('owner_id', 'uuid')
                 ->all()
             : [];
 
         foreach ($servers as &$server) {
-            $ownerId = $owners[$server['id'] ?? ''] ?? null;
+            $uuid = $idToUuid[$server['id'] ?? ''] ?? null;
+            $ownerId = $uuid !== null ? ($owners[$uuid] ?? null) : null;
             $server['owned'] = $user->root_admin || ($ownerId !== null && (int) $ownerId === (int) $user->id);
         }
         unset($server);

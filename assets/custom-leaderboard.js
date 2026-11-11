@@ -33,8 +33,8 @@
     var d = Math.floor(sec / 86400);
     var h = Math.floor((sec % 86400) / 3600);
     var m = Math.floor((sec % 3600) / 60);
-    if (d > 0) return d + 'h ' + h + 'j';
-    if (h > 0) return h + 'j ' + m + 'm';
+    if (d > 0) return d + 'd ' + h + 'h ' + m + 'm';
+    if (h > 0) return h + 'h ' + m + 'm';
     return m + 'm';
   }
 
