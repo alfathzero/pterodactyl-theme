@@ -44,12 +44,18 @@ cp "$REPO_DIR/music/routes/music.php" "$PANEL_DIR/routes/"
 
 # 3. sisipin require music.php SEBELUM catch-all SPA di routes/base.php
 python3 - "$BASE" <<'PYEOF'
-import sys
+import re, sys
 base = sys.argv[1]
 src = open(base).read()
 if "MUSIC-ORB START" in src or "require __DIR__ . '/music.php'" in src:
     print("[3/6] require music.php udah ada di routes/base.php")
 else:
+    # buang route musik inline versi lama (biar nggak dobel)
+    src, n = re.subn(
+        r"// Orb musik:.*?\nRoute::prefix\('/music'\)->group\(function \(\) \{.*?\n\}\);\n?",
+        "", src, flags=re.S)
+    if n:
+        print("[3/6] Route musik inline lama dihapus")
     block = ("/* MUSIC-ORB START — custom orb musik per akun (pterodactyl-theme) */\n"
              "require __DIR__ . '/music.php';\n"
              "/* MUSIC-ORB END */\n\n")
