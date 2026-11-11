@@ -12,7 +12,7 @@ Dibuat buat **alfa-marketdua-officialss.alfamarket2.my.id** — bebas dipakai ul
 | 🏝 Dynamic Island | Pil melayang ala iPhone: jam live WIB (`Asia/Jakarta`) + cuaca real-time (Open-Meteo, koordinat Bekasi Selatan). Bisa digeser kanan-kiri (posisi keingat), usap ke atas buat sembunyi, usap dari tepi atas / tap handle buat manggil |
 | 🖥 Dashboard | Daftar server jadi glass card, avatar icon gradient ungu, server ON glow hijau napas + bar status pulse, di HP tampil detail IP, CPU%, RAM, Disk per server |
 | 📊 Console | Kotak stats (Address/Uptime/CPU/Memory/Disk/Network) jadi glowing glass + **bar progress live** warna ijo→kuning→merah + grafik blok ikut ngaca |
-| 🎧 Orb Menu | Satu orb melayang pojok kanan bawah (tap → mekar 3 bola): **💬 Chat Room**, **✈️ Developer Telegram** (link + nama dev), **🎵 Musik**. Player musik: play/pause, stop, next/prev, bar progress bisa di-seek, playlist (tambah/hapus/pilih). **Import lagu dari file lokal HP** (IndexedDB, awet walau refresh) atau dari link MP3 |
+| 🎧 Orb Menu | Satu orb melayang pojok kanan bawah (tap → mekar 3 bola): **💬 Chat Room**, **✈️ Developer Telegram** (link + nama dev), **🎵 Musik**. Orb muncul di semua halaman panel **termasuk `/admin`**. Player musik: play/pause, stop, next/prev, bar progress bisa di-seek. **Playlist per akun** (bukan global): tiap akun cuma lihat lagu yang dia upload sendiri, tetap sinkron lintas device. Upload/hapus dari orb, file privat di `storage/app/music`, kuota 25 lagu / 300 MB per akun |
 | 💬 Chat Room | Chat global antar user panel pake identitas akun (username + avatar + badge ADMIN). Polling 2.5 detik, emoji reaksi (6), **@mention** autocomplete, hapus pesan (diri/admin), **mute user** (10m/1j/24j, admin only), online count, anti-spam & rate-limit, XSS-safe. **Notifikasi browser** (tab background) + suara + badge unread. **Auto-prune: pesan >24 jam kehapus otomatis** (cron, bisa diatur `--hours=`). Butuh `chat-install.sh` (nyentuh app code + DB) |
 | 📁 Files & halaman lain | Background gradient gelap, nav glass, tombol membulat + hover lift, baris file ngaca halus, animasi masuk berjenjang, highlight table |
 
@@ -55,12 +55,16 @@ sudo ./install.sh
 Output sukses kurang lebih:
 ```
 [*] Panel : /var/www/pterodactyl
-[1/4] Copy assets (css/js)...
-[2/4] Deploy blade templates...
-[3/4] Clear view cache...
-[4/4] Fix permissions...
+[1/6] Copy assets (css/js)...
+[2/6] Deploy blade templates...
+[3/6] Patch orb untuk halaman /admin...
+[4/6] Pasang backend orb musik per akun...
+[5/6] Clear view cache...
+[6/6] Fix permissions...
 [✓] Selesai!
 ```
+
+> Musik otomatis terpasang (controller + route + `storage/app/music`). Kalau cuma mau CSS/JS tanpa backend musik: `sudo SKIP_MUSIC=1 ./install.sh`.
 
 > **Panel lu ga di `/var/www/pterodactyl`?** Tentuin folder-nya:
 > ```bash
@@ -76,7 +80,8 @@ Mau fitur chat global antar user? Jalankan **setelah** `install.sh`:
 sudo ./chat-install.sh
 ```
 
-> ⚠️ Ini beda sama tema — dia nyentuh **app code panel** (controller/model/migration/route) + bikin 3 tabel DB (`chat_*`). Kalau ga mau, skip aja, tema tetap jalan normal (tombol chat di orb cuma diem).
+> ℹ️ Orb musik sudah otomatis aktif dari `install.sh` (playlist per akun, file privat).
+> ⚠️ Chat beda sama tema — dia nyentuh **app code panel** (controller/model/migration/route) + bikin 3 tabel DB (`chat_*`). Kalau ga mau, skip aja, tema tetap jalan normal (tombol chat di orb cuma diem).
 
 ### Step 6 — Bersihin cache view (kalau installer ga kebaca perubahan)
 
@@ -101,6 +106,8 @@ sudo -u www-data php artisan view:clear
 | Dashboard | Island jam+cuaca di atas, daftar server glass |
 | Halaman server | Bar progress warna-warni di stats |
 | Pojok kanan bawah | Orb menu (tap → Chat Room 💬 / Telegram ✈️ / Musik 🎵) |
+| `/admin` | Orb juga muncul di halaman admin |
+| Orb → Musik | Upload lagu baru → muncul di playlist akun; hapus → hilang permanen setelah refresh |
 
 ---
 
@@ -109,11 +116,11 @@ sudo -u www-data php artisan view:clear
 ```bash
 cd pterodactyl-theme
 git pull
-sudo ./install.sh
-sudo ./chat-install.sh   # kalau pakai Chat Room
+sudo ./install.sh          # tema + backend musik + orb admin
+sudo ./chat-install.sh     # kalau pakai Chat Room
 ```
 
-> `chat-install.sh` idempotent — aman dijalankan ulang, dan WAJIB dijalankan lagi **setelah upgrade panel** (upgrade panel nimpa `routes/base.php`, bikin route chat ilang → chat jadi 404).
+> `chat-install.sh` dan `music-install.sh` idempotent — aman dijalankan ulang, dan WAJIB dijalankan lagi **setelah upgrade panel** (upgrade panel nimpa `routes/base.php`, bikin route chat/musik ilang → 404). `install.sh` sudah otomatis memanggil `music-install.sh`; kalau cuma mau ulang backend musik: `sudo ./music-install.sh`.
 
 Lalu hard refresh browser lagi (file tema selalu naik versi `?v=`-nya).
 
@@ -122,10 +129,14 @@ Lalu hard refresh browser lagi (file tema selalu naik versi `?v=`-nya).
 ```bash
 cd pterodactyl-theme
 sudo ./chat-uninstall.sh   # hapus Chat Room dulu (opsional)
-sudo ./uninstall.sh
+sudo ./uninstall.sh        # tema + backend musik + patch admin
 ```
 
-Template asli (yang ke-backup `*.bak-theme` pas install) dibalikin, file tema dihapus. `chat-uninstall.sh` restore `routes/base.php`, buang file backend chat, & (kalau lu mau) drop tabel `chat_*`.
+Template asli (yang ke-backup `*.bak-theme` pas install) dibalikin, file tema dihapus. `chat-uninstall.sh` restore `routes/base.php`, buang file backend chat, & (kalau lu mau) drop tabel `chat_*`. File musik **tetap disimpan** — hapus permanen dengan:
+
+```bash
+sudo ./music-uninstall.sh --purge-files
+```
 
 ## 🛠 Troubleshooting
 
@@ -135,8 +146,14 @@ Template asli (yang ke-backup `*.bak-theme` pas install) dibalikin, file tema di
 | Tema muncul separo / lama | Cache view: `sudo -u www-data php artisan view:clear` + purge cache browser/Cloudflare |
 | Island ga muncul | Pastiin lu login sebagai user (halaman panel), bukan halaman admin lama; hard refresh |
 | Cuaca island ga muncul | HP ga bisa akses `api.open-meteo.com`? Cek koneksi/adblock |
-| Orb player ga mau muter file HP | Browser harus mendukung IndexedDB (Chrome/Firefox baru). Jangan pakai Private mode lama |
+| Orb player ga mau muter lagu | Format harus mp3/m4a/ogg/wav/flac/aac dan ukuran maks 64 MB per file |
+| Musik 401 / minta login | Orb musik butuh login. Refresh halaman setelah login |
+| Musik 403 / "bukan milik akun" | Playlist memang per akun — lagu itu milik akun lain. Login yang benar |
+| Musik 419 / upload-hapus gagal | Sesi/token expired. Hard refresh, login ulang, coba lagi |
+| Hapus lagu balik lagi setelah refresh | Pastikan orb v11+ (hard refresh). Versi lama hapus tanpa nunggu server |
+| Orb ga muncul di `/admin` | `sudo ./admin-patch.sh` lalu `php artisan view:clear` |
 | Chat Room 404 / tombol chat diem | Habis upgrade panel? `sudo ./chat-install.sh` lagi (route-nya ke-timpa). Kalau tombol diem doang: `chat-install.sh` belum pernah dijalankan |
+| Musik 404 setelah upgrade panel | `sudo ./music-install.sh` lagi (route musik ke-timpa upgrade) |
 | Chat ga mau kirim (429) | Rate limit: 20 pesan/menit atau kedetect spam — tunggu sebentar |
 | Habis upgrade panel tema ilang | Wajar, blade ke-overwrite. Tinggal `git pull && sudo ./install.sh && sudo ./chat-install.sh` lagi |
 
@@ -151,9 +168,14 @@ assets/        custom-auth-3d.css|js   -> public/assets/ (login)
                custom-anim.css         -> public/assets/ (tema + animasi global)
 chat/          app/ + database/ + routes/  -> app code panel (ChatController, models, migration, route, prune command)
                sw-notify.js            -> public/sw-notify.js (service worker notifikasi chat)
+music/         app/Http/Controllers/Music/MusicUploadController.php -> app code panel (playlist per akun + stream privat)
+               routes/music.php        -> routes/music.php (route playlist/upload/stream/hapus)
 templates/     base-core.blade.php     -> resources/views/templates/base/core.blade.php
                auth-core.blade.php     -> resources/views/templates/auth/core.blade.php
-install.sh         installer tema (backup dulu, idempotent)
+install.sh         installer tema (assets + template + patch admin + backend musik)
+admin-patch.sh     pasang/cabut orb di layout admin (`--remove`), aman buat upgrade
+music-install.sh   installer backend musik per akun (controller + route + storage privat)
+music-uninstall.sh cabut backend musik (file lagu tetap; `--purge-files` hapus permanen)
 chat-install.sh    installer Chat Room (app code + DB, idempotent; jalankan lagi habis upgrade panel)
 chat-uninstall.sh  buang Chat Room (restore route, hapus file, opsional drop tabel)
 uninstall.sh       restore tema dari backup
@@ -163,7 +185,8 @@ uninstall.sh       restore tema dari backup
 
 - `templates/base-core.blade.php` mengandung blok **SANO NEON** (toast "Selamat Pagi/Siang/Malam, Hai <user> 👋" neon) di dalam `@section('container')`. Mau buang? Hapus bagian di antara `{{-- START: SANO NEON --}}` sampai `{{-- END: SANO NEON --}}`.
 - Cuaca island pakai [Open-Meteo](https://open-meteo.com) (gratis, tanpa API key). Koordinat Bekasi Selatan ada di `assets/custom-island.js` (`WX_URL`, lat `-6.27` lon `106.99`) — ganti buat kota lain.
-- Playlist orb ke-simpen di **browser masing-masing** (localStorage + IndexedDB), bukan di server. File lagu lokal ga pernah diupload ke mana-mana.
+- Playlist musik sekarang **per akun dan disimpan di server** (`storage/app/music/playlist.json`). File lagu privat, hanya bisa di-stream lewat `/music/stream/{file}` setelah login dan hanya oleh pemiliknya (admin utama boleh moderasi). Kuota 25 lagu / 300 MB per akun.
+- File lagu lama dari versi publik otomatis dimigrasi ke storage privat dengan `owner_id: 0` (tersembunyi). Untuk mengklaim/menghapusnya, edit `playlist.json` atau jalankan `music-uninstall.sh --purge-files`.
 - Selector animasi dashboard pakai `a[href^="/server/"]:has(.status-bar)` biar ga kena link file manager (itu bug lama, udah dibenerin).
 
 ## Lisensi

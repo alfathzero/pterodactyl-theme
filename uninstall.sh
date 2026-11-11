@@ -2,9 +2,14 @@
 # balikin template asli (backup dibuat install.sh)
 set -euo pipefail
 PANEL_DIR="${PANEL_DIR:-/var/www/pterodactyl}"
+REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 BASE="$PANEL_DIR/resources/views/templates/base/core.blade.php"
 AUTH="$PANEL_DIR/resources/views/templates/auth/core.blade.php"
+
+# cabut backend musik + patch orb admin (file lagu tetap disimpan)
+[ -x "$REPO_DIR/music-uninstall.sh" ] && "$REPO_DIR/music-uninstall.sh" || true
+[ -x "$REPO_DIR/admin-patch.sh" ] && "$REPO_DIR/admin-patch.sh" --remove || true
 
 [ -f "$BASE.bak-theme" ] && cp "$BASE.bak-theme" "$BASE" && echo "[*] base restored"
 [ -f "$AUTH.bak-theme" ] && cp "$AUTH.bak-theme" "$AUTH" && echo "[*] auth restored"
@@ -17,3 +22,5 @@ rm -f "$PANEL_DIR/public/sw-notify.js"
 php "$PANEL_DIR/artisan" view:clear >/dev/null 2>&1 || true
 chown -R www-data:www-data "$PANEL_DIR/resources/views" "$PANEL_DIR/public/assets" 2>/dev/null || true
 echo "[✓] Theme dihapus, panel balik default."
+echo "    File musik tetap ada di $PANEL_DIR/storage/app/music"
+echo "    Hapus permanen: rm -rf $PANEL_DIR/storage/app/music"
