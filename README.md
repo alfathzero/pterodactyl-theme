@@ -14,7 +14,7 @@ Dibuat buat **alfa-marketdua-officialss.alfamarket2.my.id** — bebas dipakai ul
 | 📊 Console | Kotak stats (Address/Uptime/CPU/Memory/Disk/Network) jadi glowing glass + **bar progress live** warna ijo→kuning→merah + grafik blok ikut ngaca |
 | 🏆 Leaderboard | Ikon trophy di navbar dashboard → modal **Top 10/20 server** berdasarkan pemakaian **CPU / RAM / Disk** live. Global semua server panel, server offline disembunyikan, auto-refresh 10 detik. Data dikumpulkan background tiap menit lewat `leaderboard:collect` |
 | 🎧 Orb Menu | Satu orb melayang pojok kanan bawah (tap → mekar 3 bola): **💬 Chat Room**, **✈️ Developer Telegram** (link + nama dev), **🎵 Musik**. Orb muncul di semua halaman panel **termasuk `/admin`**. Player musik: play/pause, stop, next/prev, bar progress bisa di-seek. **Playlist per akun** (bukan global): tiap akun cuma lihat lagu yang dia upload sendiri, tetap sinkron lintas device. Upload/hapus dari orb, file privat di `storage/app/music`, kuota 25 lagu / 300 MB per akun |
-| 💬 Chat Room | **Khusus admin panel (root admin)** — user biasa tombol chat-nya disembunyikan dan endpoint-nya 403. Chat global antar admin pake identitas akun (username + avatar + badge ADMIN). Polling 2.5 detik, emoji reaksi (6), **@mention** autocomplete, hapus pesan (diri/admin), **mute user** (10m/1j/24j, admin only), online count, anti-spam & rate-limit, XSS-safe. **Notifikasi browser** (tab background) + suara + badge unread. **Auto-prune: pesan >24 jam kehapus otomatis** (cron, bisa diatur `--hours=`). Butuh `chat-install.sh` (nyentuh app code + DB) |
+| 💬 Chat Room | Chat global pake identitas akun. **User biasa mode baca (read-only)** — bisa lihat & reaksi, tapi kirim pesan cuma admin panel (root admin), endpoint POST ditolak 403 (username + avatar + badge ADMIN). Polling 2.5 detik, emoji reaksi (6), **@mention** autocomplete, hapus pesan (diri/admin), **mute user** (10m/1j/24j, admin only), online count, anti-spam & rate-limit, XSS-safe. **Notifikasi browser** (tab background) + suara + badge unread. **Auto-prune: pesan >24 jam kehapus otomatis** (cron, bisa diatur `--hours=`). Butuh `chat-install.sh` (nyentuh app code + DB) |
 | 📁 Files & halaman lain | Background gradient gelap, nav glass, tombol membulat + hover lift, baris file ngaca halus, animasi masuk berjenjang, highlight table |
 
 Semua animasi otomatis nonaktif kalau OS pakai `prefers-reduced-motion`.
@@ -83,7 +83,7 @@ sudo ./chat-install.sh
 ```
 
 > ℹ️ Orb musik dan leaderboard sudah otomatis aktif dari `install.sh` (musik per akun, leaderboard global top 20).
-> 🔒 Chat Room cuma bisa dipakai akun **root admin**. User biasa nggak lihat tombol chat di orb, dan akses langsung ke `/chat/*` ditolak 403.
+> 🔒 Chat Room bisa dibuka semua user, tapi **user biasa read-only**: tombol kirim dimatikan dan `POST /chat/messages` ditolak 403. Yang bisa kirim cuma akun **root admin**.
 > ⚠️ Chat beda sama tema — dia nyentuh **app code panel** (controller/model/migration/route) + bikin 3 tabel DB (`chat_*`). Kalau ga mau, skip aja, tema tetap jalan normal (tombol chat di orb cuma diem).
 
 ### Step 6 — Bersihin cache view (kalau installer ga kebaca perubahan)

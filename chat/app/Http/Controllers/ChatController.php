@@ -20,17 +20,12 @@ class ChatController extends Controller
     public const MUTE_MINUTES = [10, 60, 1440];
     private const ONLINE_TTL = 45;
 
-    /** User yang login + wajib admin panel (root admin). */
+    /** User yang login (pengaman kalau middleware auth somehow kelewat). */
     private function me(Request $request): User
     {
         $u = $request->user();
         if (!$u) {
             abort(401, 'Login dulu');
-        }
-
-        // Chat Room cuma buat admin panel
-        if (!$u->root_admin) {
-            abort(403, 'Chat Room khusus admin panel.');
         }
 
         return $u;
@@ -70,6 +65,11 @@ class ChatController extends Controller
     public function store(Request $request): JsonResponse
     {
         $user = $this->me($request);
+
+        // user biasa cuma bisa baca; kirim pesan khusus admin panel
+        if (!$user->root_admin) {
+            return new JsonResponse(['error' => 'Mode baca — cuma admin panel yang bisa kirim pesan.'], 403);
+        }
 
         if ($until = $this->mutedUntil($user->id)) {
             return new JsonResponse(['error' => 'Kamu di-mute sampai ' . $until], 403);

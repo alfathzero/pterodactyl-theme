@@ -24,9 +24,9 @@ pick_ver() {
   grep -oE "$1\?v=[0-9]+" "$REPO_DIR/templates/base-core.blade.php" 2>/dev/null | head -n1 | sed 's/.*=//' || true
 }
 ORB_CSS_V="$(pick_ver 'custom-orb\.css')"; : "${ORB_CSS_V:=7}"
-ORB_JS_V="$(pick_ver 'custom-orb\.js')";  : "${ORB_JS_V:=12}"
+ORB_JS_V="$(pick_ver 'custom-orb\.js')";  : "${ORB_JS_V:=13}"
 CHAT_CSS_V="$(pick_ver 'custom-chat\.css')"; : "${CHAT_CSS_V:=3}"
-CHAT_JS_V="$(pick_ver 'custom-chat\.js')";  : "${CHAT_JS_V:=4}"
+CHAT_JS_V="$(pick_ver 'custom-chat\.js')";  : "${CHAT_JS_V:=5}"
 
 if [ "$REMOVE" = "1" ]; then
   python3 - "$ADMIN" <<'PYEOF'

@@ -2,27 +2,12 @@
 // Identitas dari akun login; polling 2.5s(open)/10s(closed); reaksi, mention, mute, hapus.
 (function () {
   if (window.PteroChat && window.PteroChat.__built) return;
-
-  // Chat Room cuma buat admin panel — user biasa dapet stub kosong (tanpa polling)
-  function chatAllowed() {
-    try {
-      if (location.pathname.indexOf('/admin') === 0) return true;
-      var u = window.PterodactylUser;
-      return !!(u && u.root_admin);
-    } catch (e) {
-      return false;
-    }
-  }
-  if (!chatAllowed()) {
-    window.PteroChat = { __built: true, toggle: function () {}, open: function () {}, close: function () {} };
-    return;
-  }
-
   var API = '/chat', TICK = 2500, CLOSED_EVERY = 4;
   var REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
   var st = {
     __built: true, open: false, my: null, lastId: 0, oldestId: null,
-    loadingOld: false, ticks: 0, unread: 0, mention: false, newCount: 0, sending: false
+    loadingOld: false, ticks: 0, unread: 0, mention: false, newCount: 0, sending: false,
+    readonly: false
   };
   var els = {};
 
@@ -377,12 +362,22 @@
   // ============ data ============
   function banner(my) {
     if (my.muted_until && new Date(my.muted_until) > new Date()) {
+      st.readonly = true;
       els.banner.textContent = '🔇 Kamu di-mute oleh admin sampai ' + wib(my.muted_until) + ' WIB';
       els.banner.classList.add('show');
       els.input.disabled = true; els.send.disabled = true;
+      els.input.placeholder = 'Kamu sedang di-mute';
+    } else if (!my.admin) {
+      st.readonly = true;
+      els.banner.textContent = '👀 Mode baca — cuma admin panel yang bisa kirim pesan';
+      els.banner.classList.add('show');
+      els.input.disabled = true; els.send.disabled = true;
+      els.input.placeholder = 'Mode baca (read-only)';
     } else {
+      st.readonly = false;
       els.banner.classList.remove('show');
       els.input.disabled = false; els.send.disabled = false;
+      els.input.placeholder = 'Ketik pesan... (@ buat mention)';
     }
   }
   function applyNew(msgs, firstLoad) {
@@ -469,6 +464,7 @@
   function send() {
     var body = els.input.value.trim();
     if (!body || st.sending) return;
+    if (st.readonly && !(st.my && st.my.muted_until && new Date(st.my.muted_until) > new Date())) { toast('👀 Cuma admin yang bisa kirim pesan'); return; }
     if (st.my && st.my.muted_until && new Date(st.my.muted_until) > new Date()) { toast('🔇 Kamu lagi di-mute'); return; }
     st.sending = true;
     api(API + '/messages', 'POST', { body: body }).then(function (r) {
