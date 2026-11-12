@@ -20,12 +20,17 @@ class ChatController extends Controller
     public const MUTE_MINUTES = [10, 60, 1440];
     private const ONLINE_TTL = 45;
 
-    /** User yang login (pengaman kalau middleware auth somehow kelewat). */
+    /** User yang login + wajib admin panel (root admin). */
     private function me(Request $request): User
     {
         $u = $request->user();
         if (!$u) {
             abort(401, 'Login dulu');
+        }
+
+        // Chat Room cuma buat admin panel
+        if (!$u->root_admin) {
+            abort(403, 'Chat Room khusus admin panel.');
         }
 
         return $u;
@@ -152,6 +157,7 @@ class ChatController extends Controller
     /** GET /chat/users?q= — autocomplete @mention. */
     public function users(Request $request): JsonResponse
     {
+        $this->me($request);
         $q = trim((string) $request->query('q', ''));
         if (mb_strlen($q) < 1) {
             return new JsonResponse(['users' => []]);

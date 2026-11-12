@@ -2,6 +2,22 @@
 // Identitas dari akun login; polling 2.5s(open)/10s(closed); reaksi, mention, mute, hapus.
 (function () {
   if (window.PteroChat && window.PteroChat.__built) return;
+
+  // Chat Room cuma buat admin panel — user biasa dapet stub kosong (tanpa polling)
+  function chatAllowed() {
+    try {
+      if (location.pathname.indexOf('/admin') === 0) return true;
+      var u = window.PterodactylUser;
+      return !!(u && u.root_admin);
+    } catch (e) {
+      return false;
+    }
+  }
+  if (!chatAllowed()) {
+    window.PteroChat = { __built: true, toggle: function () {}, open: function () {}, close: function () {} };
+    return;
+  }
+
   var API = '/chat', TICK = 2500, CLOSED_EVERY = 4;
   var REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
   var st = {

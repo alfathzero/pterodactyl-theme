@@ -125,10 +125,19 @@
     mainOrb.setAttribute('aria-label', 'Menu orb');
     mainOrb.setAttribute('aria-expanded', 'false');
     mainOrb.innerHTML = IC.bubble + IC.x + '<span class="orb-badge" id="badge-main"></span>';
-    var chatSub = document.createElement('div');
-    chatSub.className = 'orb-sub'; chatSub.id = 'sub-chat'; chatSub.setAttribute('data-tip', 'Chat Room');
-    chatSub.setAttribute('role', 'button'); chatSub.setAttribute('tabindex', '0'); chatSub.setAttribute('aria-label', 'Chat Room');
-    chatSub.innerHTML = IC.chat + '<span class="orb-badge" id="badge-chat"></span>';
+    // Chat Room cuma buat admin panel
+    var chatAllowed = false;
+    try {
+      if (location.pathname.indexOf('/admin') === 0) chatAllowed = true;
+      else if (window.PterodactylUser) chatAllowed = !!window.PterodactylUser.root_admin;
+    } catch (e) {}
+    var chatSub = null;
+    if (chatAllowed) {
+      chatSub = document.createElement('div');
+      chatSub.className = 'orb-sub'; chatSub.id = 'sub-chat'; chatSub.setAttribute('data-tip', 'Chat Room');
+      chatSub.setAttribute('role', 'button'); chatSub.setAttribute('tabindex', '0'); chatSub.setAttribute('aria-label', 'Chat Room');
+      chatSub.innerHTML = IC.chat + '<span class="orb-badge" id="badge-chat"></span>';
+    }
     var tgSub = document.createElement('a');
     tgSub.className = 'orb-sub'; tgSub.id = 'sub-tg'; tgSub.href = TG_URL;
     tgSub.target = '_blank'; tgSub.rel = 'noopener noreferrer'; tgSub.setAttribute('data-tip', 'Developer ✈️');
@@ -155,7 +164,7 @@
       '<div class="spot-add"><input class="nm full" id="spotNm" placeholder="Judul (opsional)"></div>' +
       '<input type="file" id="spotFile" accept="audio/*" multiple style="display:none">';
     // sub-orb HARUS di dalam #orb-menu (selector .open pakai descendant)
-    menu.appendChild(chatSub);
+    if (chatSub) menu.appendChild(chatSub);
     menu.appendChild(tgSub);
     menu.appendChild(musicOrb);
     document.body.appendChild(menu);
@@ -195,10 +204,12 @@
       S.open = !S.open; panel.classList.toggle('open', S.open);
       renderList();
     }
-    chatSub.addEventListener('click', function (e) { e.stopPropagation(); openChat(); });
-    chatSub.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); openChat(); }
-    });
+    if (chatSub) {
+      chatSub.addEventListener('click', function (e) { e.stopPropagation(); openChat(); });
+      chatSub.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); openChat(); }
+      });
+    }
     musicOrb.addEventListener('click', function (e) { e.stopPropagation(); openMusic(); });
     musicOrb.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); openMusic(); }
