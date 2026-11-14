@@ -4,7 +4,10 @@
   'use strict';
 
   var ENDPOINT = '/widgets/data';
+  var ANNOUNCEMENT_ENDPOINT = '/widgets/announcement';
   var POLL_MS = 60000;
+  var ANNOUNCEMENT_POLL_MS = 60000;
+  var ICON = '/favicons/android-chrome-192x192.png';
 
   var state = {
     data: null,
@@ -14,6 +17,16 @@
     observer: null,
     pending: null,
     lastOnline: null,
+    announcement: null,
+    swPromise: null,
+    swReg: null,
+    notifyModal: null,
+    notifyModalMode: null,
+    notifyToast: null,
+    permissionBusy: false,
+    seen: {},
+    prompted: {},
+    toastShown: {},
   };
 
   /* ---------------- util ---------------- */
@@ -56,6 +69,376 @@
     if (days >= 1) return 'Sisa ' + days + ' hari';
     if (hours >= 1) return 'Sisa ' + hours + ' jam';
     return 'Sisa < 1 jam';
+  }
+
+  /* ---------------- notifikasi pengumuman ---------------- */
+
+  function notifySupported() {
+    return typeof window !== 'undefined' && 'Notification' in window;
+  }
+
+  function notifyPermission() {
+    if (!notifySupported()) return 'unsupported';
+    return Notification.permission || 'default';
+  }
+
+  function registerNotifySW() {
+    if (state.swPromise) return state.swPromise;
+    if (!('serviceWorker' in navigator)) {
+      state.swPromise = Promise.resolve(null);
+      return state.swPromise;
+    }
+    state.swPromise = navigator.serviceWorker.register('/sw-notify.js')
+      .then(function (reg) {
+        state.swReg = reg;
+        // tunggu worker aktif biar showNotification nggak gagal di percobaan pertama
+        if (navigator.serviceWorker.ready) return navigator.serviceWorker.ready;
+        return reg;
+      })
+      .catch(function () { return null; });
+    return state.swPromise;
+  }
+
+  function sessionGet(key) {
+    try { return window.sessionStorage.getItem(key); } catch (e) { return null; }
+  }
+
+  function sessionSet(key, value) {
+    try { window.sessionStorage.setItem(key, value); } catch (e) { /* ignore */ }
+  }
+
+  function localGet(key) {
+    try { return window.localStorage.getItem(key); } catch (e) { return null; }
+  }
+
+  function localSet(key, value) {
+    try { window.localStorage.setItem(key, value); } catch (e) { /* ignore */ }
+  }
+
+  function announcementKey(a) {
+    return a && a.id ? String(a.id) : 'default';
+  }
+
+  function showAnnouncementNotification(a, force) {
+    if (!a || (!a.title && !a.text)) return;
+    if (notifyPermission() !== 'granted') return;
+
+    var id = announcementKey(a);
+    var seenKey = 'dw_notif_seen_' + id;
+    if (!force && (state.seen[id] || localGet(seenKey) === '1')) return;
+
+    var prefix = a.type === 'promo' ? '🎉 ' : a.type === 'maintenance' ? '🛠️ ' : '📢 ';
+    var title = prefix + (a.title || 'Pengumuman Baru');
+    var body = String(a.text || '').replace(/\s+/g, ' ').trim();
+    if (body.length > 160) body = body.slice(0, 157) + '...';
+    if (!body) body = 'Buka panel buat lihat detail pengumuman.';
+    var until = humanUntil(a.until);
+    if (until) body += ' · ' + until;
+
+    var options = {
+      body: body,
+      icon: ICON,
+      badge: ICON,
+      tag: 'dw-ann-' + id,
+      renotify: true,
+      data: { type: 'announcement', url: '/' },
+    };
+
+    function markSeen() {
+      state.seen[id] = true;
+      localSet(seenKey, '1');
+    }
+
+    function fallback() {
+      try {
+        var n = new Notification(title, options);
+        n.onclick = function () {
+          try { window.focus(); } catch (e) { /* ignore */ }
+          n.close();
+        };
+        markSeen();
+      } catch (e) { /* browser blokir */ }
+    }
+
+    registerNotifySW().then(function (reg) {
+      if (reg && reg.showNotification) {
+        try {
+          var p = reg.showNotification(title, options);
+          if (p && typeof p.then === 'function') {
+            p.then(markSeen).catch(fallback);
+          } else {
+            markSeen();
+          }
+          return;
+        } catch (e) { /* fallback */ }
+      }
+      fallback();
+    });
+  }
+
+  function requestNotifyPermission(a) {
+    if (!notifySupported()) {
+      showNotifyModal(a, 'unsupported');
+      return;
+    }
+    if (Notification.permission === 'granted') {
+      registerNotifySW().then(function () { showAnnouncementNotification(a, true); });
+      closeNotifyModal();
+      removeNotifyToast();
+      refreshWidgets();
+      return;
+    }
+    if (Notification.permission === 'denied') {
+      if (isDashboard()) {
+        showNotifyModal(a, 'denied');
+      } else {
+        removeNotifyToast();
+        showNotifyToast(a, 'denied', true);
+      }
+      return;
+    }
+    if (state.permissionBusy) return;
+    state.permissionBusy = true;
+
+    var settled = false;
+    function done(permission) {
+      if (settled) return;
+      settled = true;
+      state.permissionBusy = false;
+      if (permission === 'granted') {
+        closeNotifyModal();
+        removeNotifyToast();
+        registerNotifySW().then(function () { showAnnouncementNotification(a, true); });
+        refreshWidgets();
+      } else if (permission === 'denied') {
+        if (isDashboard()) {
+          showNotifyModal(a, 'denied');
+        } else {
+          removeNotifyToast();
+          showNotifyToast(a, 'denied', true);
+        }
+        refreshWidgets();
+      } else {
+        closeNotifyModal();
+        removeNotifyToast();
+      }
+    }
+
+    try {
+      var result = Notification.requestPermission(done);
+      if (result && typeof result.then === 'function') result.then(done);
+    } catch (e) {
+      done('denied');
+    }
+  }
+
+  function showNotifyModal(a, mode) {
+    if (!isDashboard()) return;
+    if (state.notifyModal) {
+      if (state.notifyModalMode === mode) return;
+      closeNotifyModal();
+    }
+
+    var promptId = announcementKey(a);
+    state.prompted[promptId] = true;
+    sessionSet('dw_notif_prompt_' + promptId, '1');
+
+    var overlay = el('div', 'dw-notif-overlay');
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+
+    var card = el('div', 'dw-notif-card');
+    card.appendChild(el('div', 'dw-notif-bell', mode === 'denied' ? '🔕' : mode === 'unsupported' ? '🚫' : '🔔'));
+
+    var title = mode === 'denied' ? 'Notifikasi diblokir'
+      : mode === 'unsupported' ? 'Browser belum dukung notifikasi'
+      : 'Jangan ketinggalan info penting';
+    card.appendChild(el('div', 'dw-notif-title', title));
+
+    var text = mode === 'denied'
+      ? 'Lu pernah nolak izin notifikasi. Biar pengumuman penting tetap masuk, aktifin manual di setelan browser.'
+      : mode === 'unsupported'
+        ? 'Browser ini belum bisa nampilin notifikasi. Coba pakai Chrome / Edge terbaru, atau tambahin panel ke Home Screen dulu (iPhone).'
+        : 'Aktifkan notifikasi browser biar pengumuman baru langsung masuk ke HP lu, walaupun lu lagi buka halaman lain.';
+    card.appendChild(el('div', 'dw-notif-text', text));
+
+    if (a && (a.title || a.text)) {
+      var preview = el('div', 'dw-notif-preview');
+      preview.appendChild(el('b', null, a.title || 'Pengumuman baru'));
+      if (a.text) preview.appendChild(el('span', null, String(a.text).slice(0, 140)));
+      card.appendChild(preview);
+    }
+
+    var actions = el('div', 'dw-notif-actions');
+    if (mode === 'default') {
+      var enable = el('button', 'dw-notif-btn primary', '🔔 Aktifkan Notifikasi');
+      enable.addEventListener('click', function () { requestNotifyPermission(a); });
+      actions.appendChild(enable);
+
+      var later = el('button', 'dw-notif-btn ghost', 'Nanti');
+      later.addEventListener('click', function () { closeNotifyModal(); });
+      actions.appendChild(later);
+    } else {
+      var ok = el('button', 'dw-notif-btn primary', 'Mengerti');
+      ok.addEventListener('click', function () { closeNotifyModal(); });
+      actions.appendChild(ok);
+    }
+    card.appendChild(actions);
+
+    var hint = el('div', 'dw-notif-hint');
+    if (mode === 'denied') {
+      hint.appendChild(document.createTextNode('Klik ikon '));
+      hint.appendChild(el('code', null, '🔒 / ⓘ'));
+      hint.appendChild(document.createTextNode(' di address bar → Notifikasi → Izinkan → refresh panel.'));
+    } else if (mode === 'default') {
+      hint.appendChild(document.createTextNode('Browser bakal nanya izin sekali. Pilih '));
+      hint.appendChild(el('code', null, 'Izinkan'));
+      hint.appendChild(document.createTextNode('.'));
+    } else {
+      hint.appendChild(document.createTextNode('Di iPhone: Share → Add to Home Screen, lalu buka dari ikon itu.'));
+    }
+    card.appendChild(hint);
+
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+    state.notifyModal = overlay;
+    state.notifyModalMode = mode;
+
+    var focusTarget = actions.firstChild;
+    if (focusTarget && focusTarget.focus) {
+      try { focusTarget.focus(); } catch (e) { /* ignore */ }
+    }
+  }
+
+  function closeNotifyModal() {
+    if (state.notifyModal && state.notifyModal.parentNode) {
+      state.notifyModal.parentNode.removeChild(state.notifyModal);
+    }
+    state.notifyModal = null;
+    state.notifyModalMode = null;
+  }
+
+  function showNotifyToast(a, mode, force) {
+    if (isDashboard()) return;
+    if (state.notifyToast) {
+      if (!force) return;
+      removeNotifyToast();
+    }
+    var id = announcementKey(a);
+    var key = 'dw_notif_toast_' + id;
+    if (!force && (state.toastShown[id] || sessionGet(key) === '1')) return;
+    state.toastShown[id] = true;
+    sessionSet(key, '1');
+
+    var toast = el('div', 'dw-notif-toast');
+    toast.appendChild(el('span', 'dw-notif-toast-icon', mode === 'denied' ? '🔕' : '🔔'));
+
+    var body = el('div', 'dw-notif-toast-body');
+    body.appendChild(el('div', 'dw-notif-toast-title', mode === 'denied' ? 'Notifikasi diblokir' : 'Aktifkan notifikasi'));
+    body.appendChild(el('div', 'dw-notif-toast-text', mode === 'denied'
+      ? 'Aktifin manual di setelan situs biar nggak ketinggalan pengumuman penting.'
+      : 'Biar pengumuman baru langsung masuk ke HP lu.'));
+
+    if (mode !== 'denied') {
+      var btn = el('button', 'dw-notif-toast-btn', 'Aktifkan');
+      btn.addEventListener('click', function () { requestNotifyPermission(a); });
+      body.appendChild(btn);
+    }
+    toast.appendChild(body);
+
+    var close = el('button', 'dw-notif-toast-close', '×');
+    close.setAttribute('aria-label', 'Tutup');
+    close.addEventListener('click', function () { removeNotifyToast(); });
+    toast.appendChild(close);
+
+    document.body.appendChild(toast);
+    state.notifyToast = toast;
+  }
+
+  function removeNotifyToast() {
+    if (state.notifyToast && state.notifyToast.parentNode) {
+      state.notifyToast.parentNode.removeChild(state.notifyToast);
+    }
+    state.notifyToast = null;
+  }
+
+  function maybePromptNotify(a) {
+    if (!a || (!a.title && !a.text)) return;
+    if (!notifySupported()) return;
+    var permission = notifyPermission();
+    if (permission === 'granted') {
+      showAnnouncementNotification(a);
+      removeNotifyToast();
+      return;
+    }
+
+    var id = announcementKey(a);
+    if (isDashboard()) {
+      if (state.prompted[id] || sessionGet('dw_notif_prompt_' + id) === '1') return;
+      window.setTimeout(function () {
+        if (!isDashboard()) return;
+        showNotifyModal(a, permission === 'denied' ? 'denied' : 'default');
+      }, 700);
+    } else {
+      if (state.toastShown[id] || sessionGet('dw_notif_toast_' + id) === '1') return;
+      window.setTimeout(function () {
+        if (isDashboard()) return;
+        showNotifyToast(a, permission === 'denied' ? 'denied' : 'default');
+      }, 1200);
+    }
+  }
+
+  function handleAnnouncement(a) {
+    state.announcement = a || null;
+    if (!a || (!a.title && !a.text)) {
+      closeNotifyModal();
+      removeNotifyToast();
+      return;
+    }
+    if (!notifySupported()) return;
+    registerNotifySW();
+    maybePromptNotify(a);
+  }
+
+  function refreshWidgets() {
+    if (state.root && state.data) {
+      render(state.root, state.data);
+    }
+  }
+
+  function focusAnnouncement() {
+    if (!isDashboard()) {
+      window.location.href = '/';
+      return;
+    }
+    var a = state.announcement || (state.data && state.data.announcement);
+    if (a && a.id) {
+      try { window.localStorage.removeItem('dw_dismiss_' + a.id); } catch (e) { /* ignore */ }
+    }
+    refreshWidgets();
+    var banner = state.root && state.root.querySelector ? state.root.querySelector('.dw-banner') : null;
+    if (banner) {
+      if (banner.classList && banner.classList.add) banner.classList.add('dw-banner-flash');
+      if (banner.scrollIntoView) {
+        try { banner.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) { banner.scrollIntoView(); }
+      }
+    }
+  }
+
+  function pollAnnouncement() {
+    if (isDashboard()) return;
+    fetch(ANNOUNCEMENT_ENDPOINT, {
+      headers: { Accept: 'application/json' },
+      credentials: 'same-origin',
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (payload) {
+        handleAnnouncement(payload && payload.announcement ? payload.announcement : null);
+      })
+      .catch(function () { /* diam aja */ });
   }
 
   /* ---------------- mount point ---------------- */
@@ -129,6 +512,7 @@
     if (state.loading) return;
     if (!force && state.data) {
       render(root, state.data);
+      handleAnnouncement(state.data.announcement);
       return;
     }
 
@@ -148,6 +532,7 @@
         state.lastFetch = Date.now();
         state.loading = false;
         if (state.root) render(state.root, data);
+        handleAnnouncement(data.announcement);
       })
       .catch(function () {
         state.loading = false;
@@ -231,6 +616,26 @@
     var body = el('div', 'dw-banner-body');
     if (a.title) body.appendChild(el('strong', 'dw-banner-title', a.title));
     if (a.text) body.appendChild(el('div', 'dw-banner-text', a.text));
+
+    if (notifySupported()) {
+      var permission = notifyPermission();
+      var notifyRow = el('div', 'dw-banner-notify');
+      if (permission === 'granted') {
+        notifyRow.appendChild(el('span', 'dw-banner-notify-on', '🔔 Notifikasi aktif'));
+      } else {
+        var nbtn = el('button', 'dw-notify-btn' + (permission === 'denied' ? ' denied' : ''),
+          permission === 'denied' ? '🔕 Notif diblokir' : '🔔 Aktifkan notifikasi');
+        nbtn.addEventListener('click', function () {
+          if (permission === 'denied') showNotifyModal(a, 'denied');
+          else requestNotifyPermission(a);
+        });
+        notifyRow.appendChild(nbtn);
+        if (permission === 'denied') {
+          notifyRow.appendChild(el('span', 'dw-banner-note', 'Aktifkan manual di setelan situs'));
+        }
+      }
+      body.appendChild(notifyRow);
+    }
     banner.appendChild(body);
 
     var until = humanUntil(a.until);
@@ -495,8 +900,10 @@
       state.pending = null;
       if (!isDashboard()) {
         removeRoot();
+        closeNotifyModal();
         return;
       }
+      removeNotifyToast();
       var root = ensureRoot();
       if (!root) return;
       if (state.data) {
@@ -523,13 +930,28 @@
     scheduleMount();
     load(false);
 
+    registerNotifySW();
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', function (event) {
+        if (event.data && event.data.type === 'pterowidget:open') focusAnnouncement();
+      });
+    }
+    pollAnnouncement();
+
     window.setInterval(function () {
       if (document.hidden || !isDashboard()) return;
       load(true);
     }, POLL_MS);
 
+    window.setInterval(function () {
+      if (document.hidden) return;
+      pollAnnouncement();
+    }, ANNOUNCEMENT_POLL_MS);
+
     document.addEventListener('visibilitychange', function () {
-      if (!document.hidden && isDashboard()) load(true);
+      if (document.hidden) return;
+      if (isDashboard()) load(true);
+      else pollAnnouncement();
     });
 
     window.addEventListener('popstate', scheduleMount);

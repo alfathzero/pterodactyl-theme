@@ -10,3 +10,7 @@ use Pterodactyl\Http\Controllers\WidgetController;
 Route::get('/widgets/data', [WidgetController::class, 'data'])
     ->middleware(['auth', 'throttle:60,1'])
     ->name('widgets.data');
+
+Route::get('/widgets/announcement', [WidgetController::class, 'announcementOnly'])
+    ->middleware(['auth', 'throttle:60,1'])
+    ->name('widgets.announcement');

@@ -12,7 +12,7 @@ Dibuat buat **alfa-marketdua-officialss.alfamarket2.my.id** — bebas dipakai ul
 | 🏝 Dynamic Island | Pil melayang ala iPhone: jam live WIB (`Asia/Jakarta`) + cuaca real-time (Open-Meteo, koordinat Bekasi Selatan). Bisa digeser kanan-kiri (posisi keingat), usap ke atas buat sembunyi, usap dari tepi atas / tap handle buat manggil |
 | 🖥 Dashboard | Daftar server jadi glass card, avatar icon gradient ungu, server ON glow hijau napas + bar status pulse, di HP tampil detail IP, CPU%, RAM, Disk per server |
 | 📊 Console | Kotak stats (Address/Uptime/CPU/Memory/Disk/Network) jadi glowing glass + **bar progress live** warna ijo→kuning→merah + grafik blok ikut ngaca |
-| 🧩 Widget Dashboard | 4 kartu glass di atas daftar server: **🌐 Status Jaringan** (total/online/offline + sparkline 60 menit), **🖥️ Server Saya** (status online + klik ke console, list bisa di-scroll), **📊 Kuota Resource** (RAM/disk terpakai; kalau limit 0 tampil badge "Unlimited" tanpa bar penuh), **🛰️ Node Health** (status Wings live + jumlah server). Plus **banner pengumuman/promo** yang bisa diatur dari `/admin` → Widget & Pengumuman |
+| 🧩 Widget Dashboard | 4 kartu glass di atas daftar server: **🌐 Status Jaringan** (total/online/offline + sparkline 60 menit), **🖥️ Server Saya** (status online + klik ke console, list bisa di-scroll), **📊 Kuota Resource** (RAM/disk terpakai; kalau limit 0 tampil badge "Unlimited" tanpa bar penuh), **🛰️ Node Health** (status Wings live + jumlah server). Plus **banner pengumuman/promo** yang bisa diatur dari `/admin` → Widget & Pengumuman, lengkap dengan **notifikasi browser** (user diminta izin; notif muncul sekali per pengumuman, klik notif balik ke dashboard) |
 | 🏆 Leaderboard | Ikon trophy di navbar dashboard → modal **Top 10/20 server** berdasarkan pemakaian **CPU / RAM / Disk** live. Global semua server panel, server offline disembunyikan, auto-refresh 10 detik. Data dikumpulkan background tiap menit lewat `leaderboard:collect` |
 | 🎧 Orb Menu | Satu orb melayang pojok kanan bawah (tap → mekar 4 bola): **💬 Chat Room**, **🛍️ Shop Bot** (`@Auto_Order_By_Alfa_bot`, ikon pakai foto profil bot), **✈️ Developer Telegram** (link + nama dev), **🎵 Musik**. Orb muncul di semua halaman panel **termasuk `/admin`**. Player musik: play/pause, stop, next/prev, bar progress bisa di-seek. **Playlist per akun** (bukan global): tiap akun cuma lihat lagu yang dia upload sendiri, tetap sinkron lintas device. Upload/hapus dari orb, file privat di `storage/app/music`, kuota 25 lagu / 300 MB per akun |
 | 💬 Chat Room | Chat global pake identitas akun. **Semua user login bisa kirim pesan** (maks 2000 karakter, rate limit 40/menit). Admin bisa hapus pesan & mute user (username + avatar + badge ADMIN). Polling 2.5 detik, emoji reaksi (6), **@mention** autocomplete, hapus pesan (diri/admin), **mute user** (10m/1j/24j, admin only), online count, anti-spam & rate-limit, XSS-safe. **Notifikasi browser** (tab background) + suara + badge unread. **Auto-prune: pesan >24 jam kehapus otomatis** (cron, bisa diatur `--hours=`). Butuh `chat-install.sh` (nyentuh app code + DB) |
@@ -169,7 +169,10 @@ Pengumuman dashboard juga tetap disimpan di `storage/app/announcement.json`. Hap
 | Widget dashboard ga muncul | `sudo ./widgets-install.sh` lagi habis upgrade panel, lalu hard refresh. Cek endpoint: `/widgets/data` harus balikin JSON |
 | Widget "Nunggu history collector" | Collector belum jalan 2x. Tunggu 1–2 menit atau tes `sudo -u www-data php artisan leaderboard:collect` |
 | Node Health Wings offline | Cek `https://<fqdn>:<port>/api/system` pakai token node; firewall/port Wings sering jadi penyebab |
-| Banner pengumuman ga muncul | Pastiin checkbox **Tampilkan di dashboard** dicentang dan tanggal berakhir belum lewat |
+| Banner pengumuman ga muncul | Pastiin toggle **Tampilkan di dashboard** aktif dan tanggal berakhir belum lewat |
+| Prompt izin notifikasi ga muncul | Pastiin ada pengumuman aktif, buka dashboard, dan browser support Notification. Prompt cuma muncul sekali per sesi per pengumuman |
+| Notifikasi pengumuman ga masuk | Cek izin situs: ikon 🔒 / ⓘ di address bar → Notifikasi → **Izinkan**. Kalau pernah diblokir, harus diaktifin manual dari situ |
+| Notif cuma masuk pas panel kebuka | Itu batasan notifikasi lokal (service worker tanpa Web Push). Buat notif saat panel ditutup butuh VAPID + `minishlink/web-push` + tabel subscription |
 | Ikon trophy ga muncul | Hard refresh; pastikan `custom-leaderboard.js?v=1` ke-load dan layout base tema masih aktif |
 | Chat ga mau kirim (429) | Rate limit: 40 pesan/menit atau kedetect spam — tunggu sebentar |
 | Chat gagal kirim pesan panjang | Maksimal **2000 karakter**. Pesan >2000 ditolak server (sekarang alasannya muncul di toast) |
@@ -185,19 +188,19 @@ assets/        custom-auth-3d.css|js   -> public/assets/ (login)
                custom-orb.css|js       -> public/assets/ (orb menu: chat/shop/tg/musik + player)
                custom-shop-bot.jpg     -> public/assets/ (logo orb Shop Bot)
                custom-chat.css|js      -> public/assets/ (window chat)
-               custom-widgets.css|js   -> public/assets/ (widget dashboard + banner)
+               custom-widgets.css|js   -> public/assets/ (widget dashboard + banner + notifikasi)
                custom-anim.css         -> public/assets/ (tema + animasi global)
 chat/          app/ + database/ + routes/  -> app code panel (ChatController, models, migration, route, prune command)
-               sw-notify.js            -> public/sw-notify.js (service worker notifikasi chat)
+               sw-notify.js            -> public/sw-notify.js (service worker notifikasi chat + pengumuman)
 music/         app/Http/Controllers/Music/MusicUploadController.php -> app code panel (playlist per akun + stream privat)
                routes/music.php        -> routes/music.php (route playlist/upload/stream/hapus)
 leaderboard/   app/Http/Controllers/LeaderboardController.php -> endpoint top 10/20
                app/Console/Commands/CollectLeaderboardCommand.php -> collector resource Wings
                routes/leaderboard.php  -> routes/leaderboard.php (route /leaderboard/servers)
-widgets/       app/Http/Controllers/WidgetController.php -> endpoint /widgets/data (1 request, cache 60s)
+widgets/       app/Http/Controllers/WidgetController.php -> endpoint /widgets/data + /widgets/announcement
                app/Http/Controllers/Admin/WidgetController.php -> simpan pengumuman dashboard
                resources/views/admin/widgets/index.blade.php -> form pengumuman di /admin
-               routes/widgets.php      -> routes/widgets.php (route /widgets/data)
+               routes/widgets.php      -> routes/widgets.php (route /widgets/data + /widgets/announcement)
 templates/     base-core.blade.php     -> resources/views/templates/base/core.blade.php
                auth-core.blade.php     -> resources/views/templates/auth/core.blade.php
 install.sh            installer tema (assets + template + patch admin + musik + leaderboard + widget)
@@ -221,6 +224,17 @@ uninstall.sh          restore tema dari backup
 - File lagu lama dari versi publik otomatis dimigrasi ke storage privat dengan `owner_id: 0` (tersembunyi). Untuk mengklaim/menghapusnya, edit `playlist.json` atau jalankan `music-uninstall.sh --purge-files`.
 - Link Shop Bot ada di `assets/custom-orb.js` (`SHOP_URL`) dan ikonnya `assets/custom-shop-bot.jpg`. Ganti link/logo tinggal edit dua file itu.
 - Widget dashboard ambil data dari satu endpoint `/widgets/data` (cache global 60 detik). Status online ikut cache `leaderboard.json`; history sparkline di `storage/app/leaderboard-history.json` (60 titik terakhir, ditulis collector tiap menit). Pengumuman disimpan di `storage/app/announcement.json` dan diedit dari `/admin` → **Widget & Pengumuman**.
+
+### Notifikasi pengumuman
+
+- Pas ada pengumuman aktif, user bakal lihat **modal izin notifikasi** di dashboard (atau toast kecil di halaman server). Tombol **🔔 Aktifkan Notifikasi** memanggil `Notification.requestPermission()` — izin browser cuma bisa diminta lewat klik user, jadi nggak bisa dipaksa tanpa gesture.
+- Setelah izin **granted**, notif browser muncul **sekali per ID pengumuman** (disimpan di `localStorage` key `dw_notif_seen_<id>`). Kalau admin ganti isi pengumuman, ID baru otomatis dibuat → notif muncul lagi.
+- Klik notif → service worker fokusin tab panel dan minta dashboard scroll ke banner pengumuman (`postMessage` tipe `pterowidget:open`).
+- Kalau izin **denied**, modal nampilin cara aktifin manual (ikon 🔒 / ⓘ di address bar → Notifikasi → Izinkan). Browser nggak ngasih prompt kedua.
+- Polling pengumuman di halaman selain dashboard pakai endpoint ringan `/widgets/announcement` tiap 60 detik.
+- Mau kirim ulang notif buat pengumuman yang sama? Ubah sedikit judul/teksnya — admin otomatis bikin ID baru, jadi notif muncul lagi (notif cuma sekali per ID).
+- **Batasan:** ini notifikasi lokal lewat service worker, jadi cuma muncul **selama panel masih kebuka di suatu tab** (boleh di background). Notif saat panel ditutup total butuh **Web Push** (VAPID key, package `minishlink/web-push`, tabel subscription per user, queue worker).
+- `sw-notify.js` sudah punya handler `push` (siap dipakai kalau nanti Web Push dipasang), tapi belum ada subscription/VAPID jadi belum aktif.
 - Leaderboard server disimpan di `storage/app/leaderboard.json`, dikumpulkan cron `leaderboard:collect` tiap menit (request paralel ke Wings). Frontend cuma baca cache + auto-refresh 10 detik. Server offline/stopped tidak masuk ranking. Skor tidak digabung — ranking langsung per tab CPU/RAM/Disk.
 - Selector animasi dashboard pakai `a[href^="/server/"]:has(.status-bar)` biar ga kena link file manager (itu bug lama, udah dibenerin).
 

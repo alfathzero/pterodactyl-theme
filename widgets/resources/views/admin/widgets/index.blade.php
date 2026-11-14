@@ -208,6 +208,20 @@
 
         <div class="box box-default">
             <div class="box-header with-border">
+                <h3 class="box-title">Notifikasi Browser</h3>
+            </div>
+            <div class="box-body">
+                <p>Pas pengumuman aktif, user bakal diminta <b>izin notifikasi browser</b>. Setelah diizinkan,
+                   notif muncul sekali per pengumuman — termasuk kalau mereka lagi buka halaman server.</p>
+                <p class="text-muted">Klik notif bakal balik ke dashboard dan sorot bannernya.
+                   Mau kirim ulang notif? Ubah sedikit judul/teks biar ID pengumuman baru.</p>
+                <p class="text-muted" style="margin-bottom:0;">Catatan: notif cuma jalan selama panel masih kebuka
+                   di salah satu tab user. Notif saat panel ditutup total butuh Web Push (belum aktif).</p>
+            </div>
+        </div>
+
+        <div class="box box-default">
+            <div class="box-header with-border">
                 <h3 class="box-title">Widget Dashboard</h3>
             </div>
             <div class="box-body">

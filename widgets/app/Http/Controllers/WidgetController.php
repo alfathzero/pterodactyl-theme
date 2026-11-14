@@ -43,6 +43,17 @@ class WidgetController extends Controller
     }
 
     /**
+     * Endpoint ringan: cuma pengumuman aktif (buat notifikasi browser).
+     */
+    public function announcementOnly(): JsonResponse
+    {
+        return new JsonResponse([
+            'announcement' => $this->announcement(),
+            'generated_at' => time(),
+        ]);
+    }
+
+    /**
      * Data global (di-cache 60 detik): status jaringan + node health.
      */
     private function globalData(): array
