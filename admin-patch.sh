@@ -26,7 +26,7 @@ pick_ver() {
 ORB_CSS_V="$(pick_ver 'custom-orb\.css')"; : "${ORB_CSS_V:=8}"
 ORB_JS_V="$(pick_ver 'custom-orb\.js')";  : "${ORB_JS_V:=14}"
 CHAT_CSS_V="$(pick_ver 'custom-chat\.css')"; : "${CHAT_CSS_V:=3}"
-CHAT_JS_V="$(pick_ver 'custom-chat\.js')";  : "${CHAT_JS_V:=6}"
+CHAT_JS_V="$(pick_ver 'custom-chat\.js')";  : "${CHAT_JS_V:=7}"
 
 if [ "$REMOVE" = "1" ]; then
   python3 - "$ADMIN" <<'PYEOF'

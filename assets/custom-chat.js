@@ -371,12 +371,6 @@
       els.banner.classList.add('show');
       els.input.disabled = true; els.send.disabled = true;
       els.input.placeholder = 'Kamu sedang di-mute';
-    } else if (!my.admin) {
-      st.readonly = true;
-      els.banner.textContent = '👀 Mode baca — cuma admin panel yang bisa kirim pesan';
-      els.banner.classList.add('show');
-      els.input.disabled = true; els.send.disabled = true;
-      els.input.placeholder = 'Mode baca (read-only)';
     } else {
       st.readonly = false;
       els.banner.classList.remove('show');
@@ -469,7 +463,6 @@
     var body = els.input.value.trim();
     if (!body || st.sending) return;
     if (body.length > 2000) { toast('⚠️ Maksimal 2000 karakter (pesan lu ' + body.length + ')'); return; }
-    if (st.readonly && !(st.my && st.my.muted_until && new Date(st.my.muted_until) > new Date())) { toast('👀 Cuma admin yang bisa kirim pesan'); return; }
     if (st.my && st.my.muted_until && new Date(st.my.muted_until) > new Date()) { toast('🔇 Kamu lagi di-mute'); return; }
     st.sending = true;
     api(API + '/messages', 'POST', { body: body }).then(function (r) {

@@ -50,7 +50,7 @@ if "custom-leaderboard.css" not in src:
         src = src.replace(anchor, anchor + '\n    <link rel="stylesheet" href="/assets/custom-leaderboard.css?v=3">', 1)
         changed.append("CSS")
 if "custom-leaderboard.js" not in src:
-    anchor = '<script src="/assets/custom-chat.js?v=6"></script>'
+    anchor = '<script src="/assets/custom-chat.js?v=7"></script>'
     if anchor in src:
         src = src.replace(anchor, anchor + '\n    <script src="/assets/custom-leaderboard.js?v=3"></script>', 1)
         changed.append("JS")

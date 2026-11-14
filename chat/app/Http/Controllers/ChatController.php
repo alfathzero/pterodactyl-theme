@@ -66,11 +66,6 @@ class ChatController extends Controller
     {
         $user = $this->me($request);
 
-        // user biasa cuma bisa baca; kirim pesan khusus admin panel
-        if (!$user->root_admin) {
-            return new JsonResponse(['error' => 'Mode baca — cuma admin panel yang bisa kirim pesan.'], 403);
-        }
-
         if ($until = $this->mutedUntil($user->id)) {
             return new JsonResponse(['error' => 'Kamu di-mute sampai ' . $until], 403);
         }
