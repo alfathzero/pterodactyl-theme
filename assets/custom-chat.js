@@ -95,6 +95,10 @@
   function errMsg(j) {
     if (!j) return '';
     if (j.error) return j.error;
+    // Pterodactyl API style: errors = [{ code, status, detail }]
+    if (Array.isArray(j.errors) && j.errors.length) {
+      return j.errors[0].detail || j.errors[0].message || '';
+    }
     if (j.errors) {
       var k = Object.keys(j.errors)[0];
       if (k && j.errors[k] && j.errors[k][0]) return j.errors[k][0];
@@ -126,7 +130,7 @@
       '<button class="cm-newbtn" id="cmNew">↓ pesan baru</button>' +
       '<div class="cm-atlist" id="cmAt"></div>' +
       '<div class="cm-inputrow"><span class="cm-count" id="cmCount"></span>' +
-      '<textarea id="cmInput" rows="1" maxlength="800" placeholder="Ketik pesan… (@ buat mention)"></textarea>' +
+      '<textarea id="cmInput" rows="1" maxlength="2000" placeholder="Ketik pesan… (@ buat mention)"></textarea>' +
       '<button class="cm-send" id="cmSend" title="Kirim"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l20-9L2 3v7l15 2-15 2z"/></svg></button></div>' +
       '<div class="cm-toast" id="cmToast"></div>';
     document.body.appendChild(win);
@@ -195,8 +199,8 @@
   }
   function counter() {
     var n = els.input.value.length;
-    els.count.textContent = n + '/800';
-    els.count.classList.toggle('show', n > 700);
+    els.count.textContent = n + '/2000';
+    els.count.classList.toggle('show', n > 1900);
   }
   function nearBottom() {
     return els.list.scrollHeight - els.list.scrollTop - els.list.clientHeight < 70;
@@ -464,6 +468,7 @@
   function send() {
     var body = els.input.value.trim();
     if (!body || st.sending) return;
+    if (body.length > 2000) { toast('⚠️ Maksimal 2000 karakter (pesan lu ' + body.length + ')'); return; }
     if (st.readonly && !(st.my && st.my.muted_until && new Date(st.my.muted_until) > new Date())) { toast('👀 Cuma admin yang bisa kirim pesan'); return; }
     if (st.my && st.my.muted_until && new Date(st.my.muted_until) > new Date()) { toast('🔇 Kamu lagi di-mute'); return; }
     st.sending = true;
@@ -476,8 +481,10 @@
         if (r.data.message.id > st.lastId) st.lastId = r.data.message.id;
         scrollTopopBottom();
       } else {
-        var err = errMsg(r.data) || 'Gagal kirim';
-        toast('⚠️ ' + err);
+        var err = errMsg(r.data);
+        if (!err && r.status === 429) err = 'Terlalu banyak kirim — tunggu sebentar ya';
+        if (!err && r.status === 419) err = 'Sesi kedaluwarsa — refresh halaman dulu';
+        toast('⚠️ ' + (err || 'Gagal kirim'));
       }
     }).catch(function () { st.sending = false; toast('⚠️ Koneksi error'); });
   }

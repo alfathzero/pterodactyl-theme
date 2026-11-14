@@ -15,7 +15,7 @@ use Pterodactyl\Models\User;
 
 class ChatController extends Controller
 {
-    public const MAX_LEN = 800;
+    public const MAX_LEN = 2000;
     public const REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
     public const MUTE_MINUTES = [10, 60, 1440];
     private const ONLINE_TTL = 45;

@@ -8,7 +8,7 @@ use Pterodactyl\Http\Controllers\ChatController;
 
 Route::prefix('chat')->middleware('auth')->group(function () {
     Route::get('/messages', [ChatController::class, 'index'])->middleware('throttle:60,1');
-    Route::post('/messages', [ChatController::class, 'store'])->middleware('throttle:20,1');
+    Route::post('/messages', [ChatController::class, 'store'])->middleware('throttle:40,1');
     Route::delete('/messages/{id}', [ChatController::class, 'destroy'])
         ->whereNumber('id')->middleware('throttle:30,1');
     Route::post('/messages/{id}/react', [ChatController::class, 'react'])

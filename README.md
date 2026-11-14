@@ -163,7 +163,9 @@ Cache leaderboard juga tetap disimpan; hapus dengan `sudo ./leaderboard-uninstal
 | Leaderboard kosong / "data lama" | Cron collector belum jalan. Tes manual: `sudo -u www-data php artisan leaderboard:collect` |
 | Leaderboard 404 setelah upgrade panel | `sudo ./leaderboard-install.sh` lagi (route + cron ke-timpa upgrade) |
 | Ikon trophy ga muncul | Hard refresh; pastikan `custom-leaderboard.js?v=1` ke-load dan layout base tema masih aktif |
-| Chat ga mau kirim (429) | Rate limit: 20 pesan/menit atau kedetect spam — tunggu sebentar |
+| Chat ga mau kirim (429) | Rate limit: 40 pesan/menit atau kedetect spam — tunggu sebentar |
+| Chat gagal kirim pesan panjang | Maksimal **2000 karakter**. Pesan >2000 ditolak server (sekarang alasannya muncul di toast) |
+| Chat error 419 / "Sesi kedaluwarsa" | Token sesi expired (halaman kebuka kelamaan) — refresh halaman lalu kirim lagi |
 | Habis upgrade panel tema ilang | Wajar, blade ke-overwrite. Tinggal `git pull && sudo ./install.sh && sudo ./chat-install.sh` lagi |
 
 ## Struktur
