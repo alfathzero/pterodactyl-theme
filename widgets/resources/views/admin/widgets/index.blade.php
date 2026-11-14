@@ -13,13 +13,108 @@
 @endsection
 
 @section('content')
+<style>
+    .wg-form .form-control {
+        background: #0b1220 !important;
+        color: #e5e7eb !important;
+        border: 1px solid rgba(148, 163, 184, 0.28) !important;
+        border-radius: 10px;
+        box-shadow: none;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .wg-form .form-control:focus {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18) !important;
+    }
+    .wg-form .form-control::placeholder { color: rgba(148, 163, 184, 0.45); }
+    .wg-form select.form-control option { background: #0b1220; color: #e5e7eb; }
+    .wg-form input[type="datetime-local"] { color-scheme: dark; }
+    .wg-form label { color: #cbd5e1; font-weight: 600; }
+    .wg-form .help-block { color: rgba(148, 163, 184, 0.65) !important; }
+
+    .wg-toggle-row { margin: 6px 0 4px; }
+    .wg-toggle-row > input {
+        position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
+    }
+    .wg-toggle {
+        display: flex; align-items: center; gap: 12px;
+        width: 100%; margin: 0;
+        padding: 12px 14px;
+        border-radius: 12px;
+        cursor: pointer;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        background: rgba(255, 255, 255, 0.03);
+        transition: border-color .15s ease, background .15s ease;
+        user-select: none;
+    }
+    .wg-toggle:hover { background: rgba(255, 255, 255, 0.06); }
+    .wg-switch {
+        position: relative; flex: 0 0 auto;
+        width: 46px; height: 26px;
+        border-radius: 9999px;
+        background: rgba(148, 163, 184, 0.32);
+        transition: background .18s ease;
+    }
+    .wg-knob {
+        position: absolute; top: 3px; left: 3px;
+        width: 20px; height: 20px; border-radius: 9999px;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+        transition: transform .18s ease;
+    }
+    .wg-toggle-row > input:checked + .wg-toggle {
+        border-color: rgba(34, 197, 94, 0.45);
+        background: rgba(34, 197, 94, 0.08);
+    }
+    .wg-toggle-row > input:checked + .wg-toggle .wg-switch {
+        background: linear-gradient(90deg, #22c55e, #16a34a);
+    }
+    .wg-toggle-row > input:checked + .wg-toggle .wg-knob { transform: translateX(20px); }
+    .wg-toggle-row > input:focus-visible + .wg-toggle {
+        outline: 2px solid #6366f1; outline-offset: 2px;
+    }
+    .wg-toggle-text { flex: 1 1 auto; line-height: 1.35; }
+    .wg-toggle-text b { display: block; color: #e5e7eb; font-size: 13.5px; }
+    .wg-toggle-text small { color: rgba(148, 163, 184, 0.75); font-size: 11.5px; }
+    .wg-toggle-state {
+        flex: 0 0 auto;
+        font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+        padding: 3px 9px; border-radius: 9999px;
+        color: #f87171;
+        border: 1px solid rgba(248, 113, 113, 0.35);
+        background: rgba(248, 113, 113, 0.1);
+    }
+    .wg-toggle-row > input:checked + .wg-toggle .wg-toggle-state {
+        color: #4ade80;
+        border-color: rgba(34, 197, 94, 0.4);
+        background: rgba(34, 197, 94, 0.12);
+    }
+
+    .wg-preview {
+        border-radius: 14px;
+        padding: 14px 16px;
+        color: #e5e7eb;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        background:
+            radial-gradient(120% 140% at 100% 0%, rgba(99, 102, 241, 0.16), transparent 55%),
+            linear-gradient(160deg, #0b1220 0%, #0f172a 60%, #0a0f1d 100%);
+        transition: opacity .2s ease;
+    }
+    .wg-preview-type {
+        font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+        opacity: .7; margin-bottom: 6px; font-weight: 700;
+    }
+    .wg-preview-title { font-weight: 700; margin-bottom: 4px; font-size: 14px; }
+    .wg-preview-text { font-size: 13px; opacity: .85; word-break: break-word; }
+</style>
+
 <div class="row">
     <div class="col-md-7">
         <div class="box box-primary">
             <div class="box-header with-border">
                 <h3 class="box-title">Banner Dashboard</h3>
             </div>
-            <form method="POST" action="{{ route('admin.widgets.update') }}">
+            <form method="POST" action="{{ route('admin.widgets.update') }}" id="w-form" class="wg-form">
                 @csrf
                 <div class="box-body">
                     @if (session('success'))
@@ -60,17 +155,22 @@
                                 <label for="w-until">Berakhir (opsional)</label>
                                 <input type="datetime-local" name="until" id="w-until" class="form-control"
                                        value="{{ old('until', !empty($announcement['until']) ? date('Y-m-d\TH:i', strtotime($announcement['until'])) : '') }}">
-                                <p class="help-block">Kosongkan kalau pengumuman tampil terus.</p>
+                                <p class="help-block">Kosongkan kalau tampil terus.</p>
                                 @error('until')<span class="text-danger">{{ $message }}</span>@enderror
                             </div>
                         </div>
                     </div>
 
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" name="active" value="1"
-                                   @if(old('active', $announcement['active'] ?? false)) checked @endif>
-                            Tampilkan di dashboard
+                    <div class="wg-toggle-row">
+                        <input type="checkbox" id="w-active" name="active" value="1"
+                               @if(old('active', $announcement['active'] ?? false)) checked @endif>
+                        <label for="w-active" class="wg-toggle">
+                            <span class="wg-switch"><span class="wg-knob"></span></span>
+                            <span class="wg-toggle-text">
+                                <b>Tampilkan di dashboard</b>
+                                <small>Tap baris ini buat aktif / nonaktif</small>
+                            </span>
+                            <span class="wg-toggle-state" id="w-active-state">Nonaktif</span>
                         </label>
                     </div>
                 </div>
@@ -94,26 +194,14 @@
                 <h3 class="box-title">Preview</h3>
             </div>
             <div class="box-body">
-                @php($pType = old('type', $announcement['type'] ?? 'info'))
-                <div style="border-radius:14px; padding:14px 16px; color:#e5e7eb;
-                            border:1px solid rgba(148,163,184,.25);
-                            background:linear-gradient(160deg,#0b1220,#0f172a);">
-                    <div style="font-size:12px; letter-spacing:.08em; text-transform:uppercase; opacity:.65; margin-bottom:6px;">
-                        @if($pType === 'promo') 🎉 Promo
-                        @elseif($pType === 'maintenance') 🛠️ Maintenance
-                        @else 📢 Info
-                        @endif
-                    </div>
-                    <div style="font-weight:700; margin-bottom:4px;">
-                        {{ old('title', $announcement['title'] ?? '') ?: 'Judul pengumuman' }}
-                    </div>
-                    <div style="font-size:13px; opacity:.85;">
-                        {{ old('text', $announcement['text'] ?? '') ?: 'Isi pengumuman muncul di sini.' }}
-                    </div>
+                <div class="wg-preview" id="w-preview">
+                    <div class="wg-preview-type" id="w-preview-type">📢 Info</div>
+                    <div class="wg-preview-title" id="w-preview-title">{{ !empty($announcement['title']) ? $announcement['title'] : 'Judul pengumuman' }}</div>
+                    <div class="wg-preview-text" id="w-preview-text">{{ !empty($announcement['text']) ? $announcement['text'] : 'Isi pengumuman muncul di sini.' }}</div>
                 </div>
                 <p class="help-block" style="margin-top:12px;">
-                    Banner muncul di paling atas dashboard user. User bisa menutupnya,
-                    dan bakal muncul lagi kalau isi pengumuman diganti.
+                    Preview update langsung pas lu ngetik. Banner muncul di paling atas dashboard user,
+                    bisa ditutup, dan bakal muncul lagi kalau isinya diganti.
                 </p>
             </div>
         </div>
@@ -137,4 +225,39 @@
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    var form = document.getElementById('w-form');
+    if (!form) return;
+
+    var title = document.getElementById('w-title');
+    var text = document.getElementById('w-text');
+    var type = document.getElementById('w-type');
+    var active = document.getElementById('w-active');
+    var stateLabel = document.getElementById('w-active-state');
+    var pBox = document.getElementById('w-preview');
+    var pTitle = document.getElementById('w-preview-title');
+    var pText = document.getElementById('w-preview-text');
+    var pType = document.getElementById('w-preview-type');
+
+    var TYPES = {
+        info: '📢 Info',
+        promo: '🎉 Promo',
+        maintenance: '🛠️ Maintenance'
+    };
+
+    function render() {
+        pTitle.textContent = title.value.trim() || 'Judul pengumuman';
+        pText.textContent = text.value.trim() || 'Isi pengumuman muncul di sini.';
+        pType.textContent = TYPES[type.value] || TYPES.info;
+        stateLabel.textContent = active.checked ? 'Aktif' : 'Nonaktif';
+        pBox.style.opacity = active.checked ? '1' : '0.55';
+    }
+
+    form.addEventListener('input', render);
+    form.addEventListener('change', render);
+    render();
+})();
+</script>
 @endsection
