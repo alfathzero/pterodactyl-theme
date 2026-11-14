@@ -131,7 +131,7 @@ class WidgetController extends Controller
             $memUsed += $row ? (int) ($row['memory'] ?? 0) : 0;
             $diskUsed += $row ? (int) ($row['disk'] ?? 0) : 0;
 
-            if (count($list) < 20) {
+            if (count($list) < 100) {
                 $list[] = [
                     'name' => $server->name,
                     'uuid' => $server->uuidShort,

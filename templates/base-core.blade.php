@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/assets/custom-orb.css?v=8">
     <link rel="stylesheet" href="/assets/custom-chat.css?v=3">
     <link rel="stylesheet" href="/assets/custom-leaderboard.css?v=3">
-    <link rel="stylesheet" href="/assets/custom-widgets.css?v=2">
+    <link rel="stylesheet" href="/assets/custom-widgets.css?v=3">
 @endsection
 
 @section('container')
@@ -148,5 +148,5 @@
     <script src="/assets/custom-orb.js?v=15"></script>
     <script src="/assets/custom-chat.js?v=7"></script>
     <script src="/assets/custom-leaderboard.js?v=3"></script>
-    <script src="/assets/custom-widgets.js?v=2"></script>
+    <script src="/assets/custom-widgets.js?v=3"></script>
 @endsection

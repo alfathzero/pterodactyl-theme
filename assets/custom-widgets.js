@@ -358,15 +358,14 @@
       return cardNode;
     }
 
-    var list = el('div', 'dw-list');
-    var shown = servers.slice(0, 4);
-    shown.forEach(function (server) {
+    var list = el('div', 'dw-list dw-scroll');
+    servers.forEach(function (server) {
       list.appendChild(serverRow(server));
     });
     cardNode.appendChild(list);
 
-    if (total > shown.length) {
-      cardNode.appendChild(el('div', 'dw-more', '+' + (total - shown.length) + ' server lainnya'));
+    if (total > 5) {
+      cardNode.appendChild(el('div', 'dw-more', 'Scroll buat lihat semua (' + total + ' server)'));
     }
     return cardNode;
   }
@@ -403,8 +402,8 @@
     wrap.appendChild(quotaBar('Disk', q.disk_used, q.disk_alloc, true));
     cardNode.appendChild(wrap);
 
-    if (!q.memory_alloc && !q.disk_alloc && !q.memory_used && !q.disk_used) {
-      cardNode.appendChild(el('div', 'dw-muted', 'Belum ada resource terpakai.'));
+    if (!q.memory_alloc && !q.disk_alloc) {
+      cardNode.appendChild(el('div', 'dw-muted', 'Limit server lu unlimited — ini pemakaian live semua server.'));
     }
     return cardNode;
   }
@@ -418,16 +417,25 @@
     var group = el('div', 'dw-q');
     var head = el('div', 'dw-q-head');
     head.appendChild(el('span', null, label));
-    head.appendChild(el('span', null, unlimited
-      ? fmtBytes(used) + ' / Unlimited'
-      : fmtBytes(used) + ' / ' + fmtBytes(alloc) + ' (' + percent + '%)'));
+
+    var value = el('span', 'dw-q-val');
+    value.appendChild(el('b', null, fmtBytes(used)));
+    if (unlimited) {
+      value.appendChild(el('i', 'dw-q-badge', 'Unlimited'));
+    } else {
+      value.appendChild(document.createTextNode(' / ' + fmtBytes(alloc) + ' (' + percent + '%)'));
+    }
+    head.appendChild(value);
     group.appendChild(head);
 
-    var bar = el('div', 'dw-bar' + (isDisk ? ' disk' : '') + (percent >= 90 ? ' hot' : '') + (unlimited ? ' unlimited' : ''));
-    var fill = el('i');
-    fill.style.width = unlimited ? '100%' : percent + '%';
-    bar.appendChild(fill);
-    group.appendChild(bar);
+    // kalau unlimited, jangan gambar bar penuh (kesannya kayak 100% kepake)
+    if (!unlimited) {
+      var bar = el('div', 'dw-bar' + (isDisk ? ' disk' : '') + (percent >= 90 ? ' hot' : ''));
+      var fill = el('i');
+      fill.style.width = percent + '%';
+      bar.appendChild(fill);
+      group.appendChild(bar);
+    }
 
     return group;
   }
@@ -457,6 +465,12 @@
       var sub = node.wings === 'online' ? 'Wings online' : node.wings === 'offline' ? 'Wings offline' : 'Status unknown';
       if (node.maintenance) sub = 'Maintenance · ' + sub;
       main.appendChild(el('div', 'dw-node-sub', sub));
+
+      var alloc = [];
+      if (Number(node.memory) > 0) alloc.push(fmtBytes(Number(node.memory) * 1048576) + ' RAM');
+      if (Number(node.disk) > 0) alloc.push(fmtBytes(Number(node.disk) * 1048576) + ' disk');
+      if (alloc.length) main.appendChild(el('div', 'dw-node-alloc', 'Alokasi ' + alloc.join(' · ')));
+
       row.appendChild(main);
 
       var right = el('div', 'dw-node-right');
