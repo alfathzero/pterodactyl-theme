@@ -5,6 +5,8 @@
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   color: #e5e7eb;
 }
+.dw-global-root { margin: 0 0 1rem; }
+.dw-global-root .dw-banner { margin-bottom: 0; }
 
 /* ---------- banner pengumuman ---------- */
 .dw-banner {

@@ -24,6 +24,7 @@
     notifyModalMode: null,
     notifyToast: null,
     permissionBusy: false,
+    globalBanner: null,
     seen: {},
     prompted: {},
     toastShown: {},
@@ -185,7 +186,7 @@
       registerNotifySW().then(function () { showAnnouncementNotification(a, true); });
       closeNotifyModal();
       removeNotifyToast();
-      refreshWidgets();
+      refreshAnnouncementViews();
       return;
     }
     if (Notification.permission === 'denied') {
@@ -209,7 +210,7 @@
         closeNotifyModal();
         removeNotifyToast();
         registerNotifySW().then(function () { showAnnouncementNotification(a, true); });
-        refreshWidgets();
+        refreshAnnouncementViews();
       } else if (permission === 'denied') {
         if (isDashboard()) {
           showNotifyModal(a, 'denied');
@@ -217,7 +218,7 @@
           removeNotifyToast();
           showNotifyToast(a, 'denied', true);
         }
-        refreshWidgets();
+        refreshAnnouncementViews();
       } else {
         closeNotifyModal();
         removeNotifyToast();
@@ -372,20 +373,14 @@
       return;
     }
 
+    if (!isDashboard()) return;
+
     var id = announcementKey(a);
-    if (isDashboard()) {
-      if (state.prompted[id] || sessionGet('dw_notif_prompt_' + id) === '1') return;
-      window.setTimeout(function () {
-        if (!isDashboard()) return;
-        showNotifyModal(a, permission === 'denied' ? 'denied' : 'default');
-      }, 700);
-    } else {
-      if (state.toastShown[id] || sessionGet('dw_notif_toast_' + id) === '1') return;
-      window.setTimeout(function () {
-        if (isDashboard()) return;
-        showNotifyToast(a, permission === 'denied' ? 'denied' : 'default');
-      }, 1200);
-    }
+    if (state.prompted[id] || sessionGet('dw_notif_prompt_' + id) === '1') return;
+    window.setTimeout(function () {
+      if (!isDashboard()) return;
+      showNotifyModal(a, permission === 'denied' ? 'denied' : 'default');
+    }, 700);
   }
 
   function handleAnnouncement(a) {
@@ -393,17 +388,78 @@
     if (!a || (!a.title && !a.text)) {
       closeNotifyModal();
       removeNotifyToast();
+      removeGlobalBanner();
       return;
     }
-    if (!notifySupported()) return;
-    registerNotifySW();
-    maybePromptNotify(a);
+
+    if (isDashboard()) {
+      removeGlobalBanner();
+      if (!notifySupported()) return;
+      registerNotifySW();
+      maybePromptNotify(a);
+    } else {
+      renderGlobalBanner(a);
+      if (!notifySupported()) return;
+      registerNotifySW();
+      if (notifyPermission() === 'granted') showAnnouncementNotification(a);
+    }
   }
 
   function refreshWidgets() {
     if (state.root && state.data) {
       render(state.root, state.data);
     }
+  }
+
+  function refreshAnnouncementViews() {
+    if (isDashboard()) {
+      refreshWidgets();
+    } else if (state.announcement) {
+      renderGlobalBanner(state.announcement);
+    }
+  }
+
+  function removeGlobalBanner() {
+    if (state.globalBanner && state.globalBanner.parentNode) {
+      state.globalBanner.parentNode.removeChild(state.globalBanner);
+    }
+    state.globalBanner = null;
+    var existing = document.getElementById('global-announcement');
+    if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+  }
+
+  function renderGlobalBanner(a) {
+    if (isDashboard()) {
+      removeGlobalBanner();
+      return;
+    }
+    if (!a || (!a.title && !a.text)) {
+      removeGlobalBanner();
+      return;
+    }
+
+    var container = findContentContainer();
+    if (!container) return;
+
+    var root = state.globalBanner;
+    if (!root || !container.contains(root)) {
+      var existing = document.getElementById('global-announcement');
+      if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+      root = el('div', 'dw-root dw-global-root');
+      root.id = 'global-announcement';
+      container.insertBefore(root, container.firstChild);
+      state.globalBanner = root;
+    }
+
+    var banner = announcementBanner(a);
+    if (!banner) {
+      removeGlobalBanner();
+      return;
+    }
+
+    root.textContent = '';
+    root.appendChild(banner);
   }
 
   function focusAnnouncement() {
@@ -451,21 +507,45 @@
     var divs = app.querySelectorAll('div');
     for (var i = 0; i < divs.length; i++) {
       var div = divs[i];
-      if (window.getComputedStyle(div).maxWidth !== '1200px') continue;
-      candidates.push(div);
+      if (div.id === 'global-announcement') continue;
+
+      var style = window.getComputedStyle(div);
+      if (style.maxWidth !== '1200px') continue;
+
+      // skip navbar / subnav yang parent-nya bisa di-scroll horizontal
+      var parent = div.parentElement || div.parentNode;
+      if (parent) {
+        var parentStyle = window.getComputedStyle(parent);
+        if (parentStyle.overflowX === 'auto' || parentStyle.overflowX === 'scroll') continue;
+      }
+      if (div.querySelector && div.querySelector('#logo')) continue;
+
+      // skip footer (pendek, isinya copyright Pterodactyl)
+      if (div.offsetHeight < 100) continue;
+      if (div.textContent && div.textContent.length < 400 && /Pterodactyl/.test(div.textContent)) continue;
+
+      candidates.push({
+        el: div,
+        marginTop: parseFloat(style.marginTop) || 0,
+        height: div.offsetHeight,
+      });
     }
     if (!candidates.length) return null;
 
-    for (var j = 0; j < candidates.length; j++) {
-      if (candidates[j].querySelector('a[href^="/server/"], a[href*="page="], input[type="checkbox"]')) {
-        return candidates[j];
+    // container konten utama biasanya punya margin atas (my-4 / sm:my-10)
+    var withMargin = candidates.filter(function (c) { return c.marginTop > 0; });
+    var pool = withMargin.length ? withMargin : candidates;
+
+    for (var j = 0; j < pool.length; j++) {
+      if (pool[j].el.querySelector('a[href^="/server/"], a[href*="page="], input[type="checkbox"]')) {
+        return pool[j].el;
       }
     }
 
     // fallback: container paling tinggi (konten utama, bukan footer)
-    return candidates.sort(function (a, b) {
-      return b.offsetHeight - a.offsetHeight;
-    })[0];
+    return pool.sort(function (a, b) {
+      return b.height - a.height;
+    })[0].el;
   }
 
   function removeRoot() {
@@ -626,8 +706,12 @@
         var nbtn = el('button', 'dw-notify-btn' + (permission === 'denied' ? ' denied' : ''),
           permission === 'denied' ? '🔕 Notif diblokir' : '🔔 Aktifkan notifikasi');
         nbtn.addEventListener('click', function () {
-          if (permission === 'denied') showNotifyModal(a, 'denied');
-          else requestNotifyPermission(a);
+          if (permission === 'denied') {
+            if (isDashboard()) showNotifyModal(a, 'denied');
+            else showNotifyToast(a, 'denied', true);
+          } else {
+            requestNotifyPermission(a);
+          }
         });
         notifyRow.appendChild(nbtn);
         if (permission === 'denied') {
@@ -645,7 +729,9 @@
     close.setAttribute('aria-label', 'Tutup pengumuman');
     close.addEventListener('click', function () {
       try { window.localStorage.setItem(key, '1'); } catch (e) { /* ignore */ }
-      if (banner.parentNode) banner.parentNode.removeChild(banner);
+      var parent = banner.parentNode;
+      if (parent) parent.removeChild(banner);
+      if (parent && parent === state.globalBanner) removeGlobalBanner();
     });
     banner.appendChild(close);
 
@@ -901,9 +987,11 @@
       if (!isDashboard()) {
         removeRoot();
         closeNotifyModal();
+        renderGlobalBanner(state.announcement);
         return;
       }
       removeNotifyToast();
+      removeGlobalBanner();
       var root = ensureRoot();
       if (!root) return;
       if (state.data) {
@@ -919,7 +1007,11 @@
     var app = document.getElementById('app');
     if (!app) return;
     state.observer = new MutationObserver(function () {
-      if (!state.root || !document.body.contains(state.root)) scheduleMount();
+      if (isDashboard()) {
+        if (!state.root || !document.body.contains(state.root)) scheduleMount();
+      } else if (state.announcement && (!state.globalBanner || !document.body.contains(state.globalBanner))) {
+        scheduleMount();
+      }
     });
     state.observer.observe(app, { childList: true, subtree: true });
   }

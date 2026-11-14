@@ -131,7 +131,7 @@ if "custom-widgets.css" not in src:
                    '<link rel="stylesheet" href="/assets/custom-chat.css?v=3">',
                    '<link rel="stylesheet" href="/assets/custom-orb.css?v=8">'):
         if anchor in src:
-            src = src.replace(anchor, anchor + '\n    <link rel="stylesheet" href="/assets/custom-widgets.css?v=4">', 1)
+            src = src.replace(anchor, anchor + '\n    <link rel="stylesheet" href="/assets/custom-widgets.css?v=5">', 1)
             changed.append("CSS")
             break
 if "custom-widgets.js" not in src:
@@ -139,7 +139,7 @@ if "custom-widgets.js" not in src:
                    '<script src="/assets/custom-chat.js?v=7"></script>',
                    '<script src="/assets/custom-orb.js?v=15"></script>'):
         if anchor in src:
-            src = src.replace(anchor, anchor + '\n    <script src="/assets/custom-widgets.js?v=4"></script>', 1)
+            src = src.replace(anchor, anchor + '\n    <script src="/assets/custom-widgets.js?v=5"></script>', 1)
             changed.append("JS")
             break
 if changed:

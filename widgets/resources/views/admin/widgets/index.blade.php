@@ -5,7 +5,7 @@
 @endsection
 
 @section('content-header')
-    <h1>Widget &amp; Pengumuman<small>Atur banner promo / info di dashboard user.</small></h1>
+    <h1>Widget &amp; Pengumuman<small>Atur banner promo / info di dashboard dan halaman server.</small></h1>
     <ol class="breadcrumb">
         <li><a href="{{ route('admin.index') }}">Admin</a></li>
         <li class="active">Widget &amp; Pengumuman</li>
@@ -200,8 +200,9 @@
                     <div class="wg-preview-text" id="w-preview-text">{{ !empty($announcement['text']) ? $announcement['text'] : 'Isi pengumuman muncul di sini.' }}</div>
                 </div>
                 <p class="help-block" style="margin-top:12px;">
-                    Preview update langsung pas lu ngetik. Banner muncul di paling atas dashboard user,
-                    bisa ditutup, dan bakal muncul lagi kalau isinya diganti.
+                    Preview update langsung pas lu ngetik. Banner muncul di paling atas dashboard user
+                    <b>dan di semua halaman server</b> (console, files, dll), bisa ditutup, dan bakal muncul
+                    lagi kalau isinya diganti.
                 </p>
             </div>
         </div>
@@ -213,8 +214,8 @@
             <div class="box-body">
                 <p>Pas pengumuman aktif, user bakal diminta <b>izin notifikasi browser</b>. Setelah diizinkan,
                    notif muncul sekali per pengumuman — termasuk kalau mereka lagi buka halaman server.</p>
-                <p class="text-muted">Klik notif bakal balik ke dashboard dan sorot bannernya.
-                   Mau kirim ulang notif? Ubah sedikit judul/teks biar ID pengumuman baru.</p>
+                <p class="text-muted">Klik notif bakal fokus ke panel dan sorot bannernya (dashboard maupun
+                   halaman server). Mau kirim ulang notif? Ubah sedikit judul/teks biar ID pengumuman baru.</p>
                 <p class="text-muted" style="margin-bottom:0;">Catatan: notif cuma jalan selama panel masih kebuka
                    di salah satu tab user. Notif saat panel ditutup total butuh Web Push (belum aktif).</p>
             </div>
