@@ -113,6 +113,22 @@ class CollectLeaderboardCommand extends Command
             @chmod($tmp, 0644);
             rename($tmp, $path);
 
+            // history 60 titik buat sparkline widget Status Jaringan
+            $historyPath = storage_path('app/leaderboard-history.json');
+            $history = [];
+            if (is_file($historyPath)) {
+                $decoded = json_decode((string) @file_get_contents($historyPath), true);
+                if (is_array($decoded)) {
+                    $history = $decoded;
+                }
+            }
+            $history[] = ['t' => time(), 'online' => count($rows)];
+            $history = array_slice($history, -60);
+            $historyTmp = $historyPath . '.tmp';
+            file_put_contents($historyTmp, json_encode($history, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            @chmod($historyTmp, 0644);
+            rename($historyTmp, $historyPath);
+
             $elapsed = round(microtime(true) - $started, 2);
             $this->info(sprintf(
                 'leaderboard:collect -> %d server online, %d gagal, %ss (concurrency %d)',

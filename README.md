@@ -12,6 +12,7 @@ Dibuat buat **alfa-marketdua-officialss.alfamarket2.my.id** — bebas dipakai ul
 | 🏝 Dynamic Island | Pil melayang ala iPhone: jam live WIB (`Asia/Jakarta`) + cuaca real-time (Open-Meteo, koordinat Bekasi Selatan). Bisa digeser kanan-kiri (posisi keingat), usap ke atas buat sembunyi, usap dari tepi atas / tap handle buat manggil |
 | 🖥 Dashboard | Daftar server jadi glass card, avatar icon gradient ungu, server ON glow hijau napas + bar status pulse, di HP tampil detail IP, CPU%, RAM, Disk per server |
 | 📊 Console | Kotak stats (Address/Uptime/CPU/Memory/Disk/Network) jadi glowing glass + **bar progress live** warna ijo→kuning→merah + grafik blok ikut ngaca |
+| 🧩 Widget Dashboard | 4 kartu glass di atas daftar server: **🌐 Status Jaringan** (total/online/offline + sparkline 60 menit), **🖥️ Server Saya** (status online + klik ke console), **📊 Kuota Resource** (RAM/disk terpakai, "Unlimited" kalau limit 0), **🛰️ Node Health** (status Wings live + jumlah server). Plus **banner pengumuman/promo** yang bisa diatur dari `/admin` → Widget & Pengumuman |
 | 🏆 Leaderboard | Ikon trophy di navbar dashboard → modal **Top 10/20 server** berdasarkan pemakaian **CPU / RAM / Disk** live. Global semua server panel, server offline disembunyikan, auto-refresh 10 detik. Data dikumpulkan background tiap menit lewat `leaderboard:collect` |
 | 🎧 Orb Menu | Satu orb melayang pojok kanan bawah (tap → mekar 4 bola): **💬 Chat Room**, **🛍️ Shop Bot** (`@Auto_Order_By_Alfa_bot`, ikon pakai foto profil bot), **✈️ Developer Telegram** (link + nama dev), **🎵 Musik**. Orb muncul di semua halaman panel **termasuk `/admin`**. Player musik: play/pause, stop, next/prev, bar progress bisa di-seek. **Playlist per akun** (bukan global): tiap akun cuma lihat lagu yang dia upload sendiri, tetap sinkron lintas device. Upload/hapus dari orb, file privat di `storage/app/music`, kuota 25 lagu / 300 MB per akun |
 | 💬 Chat Room | Chat global pake identitas akun. **Semua user login bisa kirim pesan** (maks 2000 karakter, rate limit 40/menit). Admin bisa hapus pesan & mute user (username + avatar + badge ADMIN). Polling 2.5 detik, emoji reaksi (6), **@mention** autocomplete, hapus pesan (diri/admin), **mute user** (10m/1j/24j, admin only), online count, anti-spam & rate-limit, XSS-safe. **Notifikasi browser** (tab background) + suara + badge unread. **Auto-prune: pesan >24 jam kehapus otomatis** (cron, bisa diatur `--hours=`). Butuh `chat-install.sh` (nyentuh app code + DB) |
@@ -56,17 +57,18 @@ sudo ./install.sh
 Output sukses kurang lebih:
 ```
 [*] Panel : /var/www/pterodactyl
-[1/7] Copy assets (css/js)...
-[2/7] Deploy blade templates...
-[3/7] Patch orb untuk halaman /admin...
-[4/7] Pasang backend orb musik per akun...
-[5/7] Pasang leaderboard resource server...
-[6/7] Clear view cache...
-[7/7] Fix permissions...
+[1/8] Copy assets (css/js)...
+[2/8] Deploy blade templates...
+[3/8] Patch orb untuk halaman /admin...
+[4/8] Pasang backend orb musik per akun...
+[5/8] Pasang leaderboard resource server...
+[6/8] Pasang widget dashboard...
+[7/8] Clear view cache...
+[8/8] Fix permissions...
 [✓] Selesai!
 ```
 
-> Musik otomatis terpasang (controller + route + `storage/app/music`). Leaderboard juga otomatis (collector + cron tiap menit). Kalau cuma mau CSS/JS tanpa backend: `sudo SKIP_MUSIC=1 SKIP_LEADERBOARD=1 ./install.sh`.
+> Musik otomatis terpasang (controller + route + `storage/app/music`). Leaderboard juga otomatis (collector + cron tiap menit). Widget dashboard juga otomatis (4 kartu + halaman pengumuman di `/admin`). Kalau cuma mau CSS/JS tanpa backend: `sudo SKIP_MUSIC=1 SKIP_LEADERBOARD=1 SKIP_WIDGETS=1 ./install.sh`.
 
 > **Panel lu ga di `/var/www/pterodactyl`?** Tentuin folder-nya:
 > ```bash
@@ -106,11 +108,11 @@ sudo -u www-data php artisan view:clear
 | Halaman | Yang harus keliatan |
 |---|---|
 | `/auth/login` | Globe titik 3D + ripple pas disentuh |
-| Dashboard | Island jam+cuaca di atas, daftar server glass |
+| Dashboard | 4 widget glass di atas daftar server (Status Jaringan, Server Saya, Kuota, Node Health) + daftar server glass |
 | Navbar dashboard | Ikon 🏆 leaderboard → Top 10/20 CPU/RAM/Disk live |
 | Halaman server | Bar progress warna-warni di stats |
-| Pojok kanan bawah | Orb menu (tap → Chat Room 💬 / Telegram ✈️ / Musik 🎵) |
-| `/admin` | Orb juga muncul di halaman admin |
+| Pojok kanan bawah | Orb menu (tap → Chat Room 💬 / Shop Bot 🛍️ / Telegram ✈️ / Musik 🎵) |
+| `/admin` | Orb juga muncul + menu **Widget & Pengumuman** buat atur banner dashboard |
 | Orb → Musik | Upload lagu baru → muncul di playlist akun; hapus → hilang permanen setelah refresh |
 
 ---
@@ -120,11 +122,11 @@ sudo -u www-data php artisan view:clear
 ```bash
 cd pterodactyl-theme
 git pull
-sudo ./install.sh          # tema + musik + leaderboard + orb admin
+sudo ./install.sh          # tema + musik + leaderboard + widget + orb admin
 sudo ./chat-install.sh     # kalau pakai Chat Room
 ```
 
-> `chat-install.sh`, `music-install.sh`, dan `leaderboard-install.sh` idempotent — aman dijalankan ulang, dan WAJIB dijalankan lagi **setelah upgrade panel** (upgrade panel nimpa `routes/base.php`, bikin route chat/musik/leaderboard ilang → 404). `install.sh` sudah otomatis memanggil music + leaderboard; kalau mau ulang backend tertentu: `sudo ./music-install.sh` / `sudo ./leaderboard-install.sh`.
+> `chat-install.sh`, `music-install.sh`, `leaderboard-install.sh`, dan `widgets-install.sh` idempotent — aman dijalankan ulang, dan WAJIB dijalankan lagi **setelah upgrade panel** (upgrade panel nimpa `routes/base.php`, bikin route chat/musik/leaderboard ilang → 404). `install.sh` sudah otomatis memanggil music + leaderboard + widget; kalau mau ulang backend tertentu: `sudo ./music-install.sh` / `sudo ./leaderboard-install.sh` / `sudo ./widgets-install.sh`.
 
 Lalu hard refresh browser lagi (file tema selalu naik versi `?v=`-nya).
 
@@ -133,7 +135,7 @@ Lalu hard refresh browser lagi (file tema selalu naik versi `?v=`-nya).
 ```bash
 cd pterodactyl-theme
 sudo ./chat-uninstall.sh   # hapus Chat Room dulu (opsional)
-sudo ./uninstall.sh        # tema + musik + leaderboard + patch admin
+sudo ./uninstall.sh        # tema + musik + leaderboard + widget + patch admin
 ```
 
 Template asli (yang ke-backup `*.bak-theme` pas install) dibalikin, file tema dihapus. `chat-uninstall.sh` restore `routes/base.php`, buang file backend chat, & (kalau lu mau) drop tabel `chat_*`. File musik **tetap disimpan** — hapus permanen dengan:
@@ -143,6 +145,8 @@ sudo ./music-uninstall.sh --purge-files
 ```
 
 Cache leaderboard juga tetap disimpan; hapus dengan `sudo ./leaderboard-uninstall.sh --purge-data`.
+
+Pengumuman dashboard juga tetap disimpan di `storage/app/announcement.json`. Hapus manual kalau mau bersih total.
 
 ## 🛠 Troubleshooting
 
@@ -162,6 +166,10 @@ Cache leaderboard juga tetap disimpan; hapus dengan `sudo ./leaderboard-uninstal
 | Musik 404 setelah upgrade panel | `sudo ./music-install.sh` lagi (route musik ke-timpa upgrade) |
 | Leaderboard kosong / "data lama" | Cron collector belum jalan. Tes manual: `sudo -u www-data php artisan leaderboard:collect` |
 | Leaderboard 404 setelah upgrade panel | `sudo ./leaderboard-install.sh` lagi (route + cron ke-timpa upgrade) |
+| Widget dashboard ga muncul | `sudo ./widgets-install.sh` lagi habis upgrade panel, lalu hard refresh. Cek endpoint: `/widgets/data` harus balikin JSON |
+| Widget "Nunggu history collector" | Collector belum jalan 2x. Tunggu 1–2 menit atau tes `sudo -u www-data php artisan leaderboard:collect` |
+| Node Health Wings offline | Cek `https://<fqdn>:<port>/api/system` pakai token node; firewall/port Wings sering jadi penyebab |
+| Banner pengumuman ga muncul | Pastiin checkbox **Tampilkan di dashboard** dicentang dan tanggal berakhir belum lewat |
 | Ikon trophy ga muncul | Hard refresh; pastikan `custom-leaderboard.js?v=1` ke-load dan layout base tema masih aktif |
 | Chat ga mau kirim (429) | Rate limit: 40 pesan/menit atau kedetect spam — tunggu sebentar |
 | Chat gagal kirim pesan panjang | Maksimal **2000 karakter**. Pesan >2000 ditolak server (sekarang alasannya muncul di toast) |
@@ -177,6 +185,7 @@ assets/        custom-auth-3d.css|js   -> public/assets/ (login)
                custom-orb.css|js       -> public/assets/ (orb menu: chat/shop/tg/musik + player)
                custom-shop-bot.jpg     -> public/assets/ (logo orb Shop Bot)
                custom-chat.css|js      -> public/assets/ (window chat)
+               custom-widgets.css|js   -> public/assets/ (widget dashboard + banner)
                custom-anim.css         -> public/assets/ (tema + animasi global)
 chat/          app/ + database/ + routes/  -> app code panel (ChatController, models, migration, route, prune command)
                sw-notify.js            -> public/sw-notify.js (service worker notifikasi chat)
@@ -185,14 +194,20 @@ music/         app/Http/Controllers/Music/MusicUploadController.php -> app code 
 leaderboard/   app/Http/Controllers/LeaderboardController.php -> endpoint top 10/20
                app/Console/Commands/CollectLeaderboardCommand.php -> collector resource Wings
                routes/leaderboard.php  -> routes/leaderboard.php (route /leaderboard/servers)
+widgets/       app/Http/Controllers/WidgetController.php -> endpoint /widgets/data (1 request, cache 60s)
+               app/Http/Controllers/Admin/WidgetController.php -> simpan pengumuman dashboard
+               resources/views/admin/widgets/index.blade.php -> form pengumuman di /admin
+               routes/widgets.php      -> routes/widgets.php (route /widgets/data)
 templates/     base-core.blade.php     -> resources/views/templates/base/core.blade.php
                auth-core.blade.php     -> resources/views/templates/auth/core.blade.php
-install.sh            installer tema (assets + template + patch admin + musik + leaderboard)
+install.sh            installer tema (assets + template + patch admin + musik + leaderboard + widget)
 admin-patch.sh        pasang/cabut orb di layout admin (`--remove`), aman buat upgrade
 music-install.sh      installer backend musik per akun (controller + route + storage privat)
 music-uninstall.sh    cabut backend musik (file lagu tetap; `--purge-files` hapus permanen)
 leaderboard-install.sh   installer leaderboard + collector + cron tiap menit
 leaderboard-uninstall.sh cabut leaderboard + cron (`--purge-data` hapus cache)
+widgets-install.sh    installer widget dashboard + halaman pengumuman (idempotent)
+widgets-uninstall.sh  cabut widget dashboard (pengumuman tetap disimpan)
 chat-install.sh       installer Chat Room (app code + DB, idempotent; jalankan lagi habis upgrade panel)
 chat-uninstall.sh     buang Chat Room (restore route, hapus file, opsional drop tabel)
 uninstall.sh          restore tema dari backup
@@ -205,6 +220,7 @@ uninstall.sh          restore tema dari backup
 - Playlist musik sekarang **per akun dan disimpan di server** (`storage/app/music/playlist.json`). File lagu privat, hanya bisa di-stream lewat `/music/stream/{file}` setelah login dan hanya oleh pemiliknya (admin utama boleh moderasi). Kuota 25 lagu / 300 MB per akun.
 - File lagu lama dari versi publik otomatis dimigrasi ke storage privat dengan `owner_id: 0` (tersembunyi). Untuk mengklaim/menghapusnya, edit `playlist.json` atau jalankan `music-uninstall.sh --purge-files`.
 - Link Shop Bot ada di `assets/custom-orb.js` (`SHOP_URL`) dan ikonnya `assets/custom-shop-bot.jpg`. Ganti link/logo tinggal edit dua file itu.
+- Widget dashboard ambil data dari satu endpoint `/widgets/data` (cache global 60 detik). Status online ikut cache `leaderboard.json`; history sparkline di `storage/app/leaderboard-history.json` (60 titik terakhir, ditulis collector tiap menit). Pengumuman disimpan di `storage/app/announcement.json` dan diedit dari `/admin` → **Widget & Pengumuman**.
 - Leaderboard server disimpan di `storage/app/leaderboard.json`, dikumpulkan cron `leaderboard:collect` tiap menit (request paralel ke Wings). Frontend cuma baca cache + auto-refresh 10 detik. Server offline/stopped tidak masuk ranking. Skor tidak digabung — ranking langsung per tab CPU/RAM/Disk.
 - Selector animasi dashboard pakai `a[href^="/server/"]:has(.status-bar)` biar ga kena link file manager (itu bug lama, udah dibenerin).
 
