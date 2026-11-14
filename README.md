@@ -13,7 +13,7 @@ Dibuat buat **alfa-marketdua-officialss.alfamarket2.my.id** — bebas dipakai ul
 | 🖥 Dashboard | Daftar server jadi glass card, avatar icon gradient ungu, server ON glow hijau napas + bar status pulse, di HP tampil detail IP, CPU%, RAM, Disk per server |
 | 📊 Console | Kotak stats (Address/Uptime/CPU/Memory/Disk/Network) jadi glowing glass + **bar progress live** warna ijo→kuning→merah + grafik blok ikut ngaca |
 | 🏆 Leaderboard | Ikon trophy di navbar dashboard → modal **Top 10/20 server** berdasarkan pemakaian **CPU / RAM / Disk** live. Global semua server panel, server offline disembunyikan, auto-refresh 10 detik. Data dikumpulkan background tiap menit lewat `leaderboard:collect` |
-| 🎧 Orb Menu | Satu orb melayang pojok kanan bawah (tap → mekar 3 bola): **💬 Chat Room**, **✈️ Developer Telegram** (link + nama dev), **🎵 Musik**. Orb muncul di semua halaman panel **termasuk `/admin`**. Player musik: play/pause, stop, next/prev, bar progress bisa di-seek. **Playlist per akun** (bukan global): tiap akun cuma lihat lagu yang dia upload sendiri, tetap sinkron lintas device. Upload/hapus dari orb, file privat di `storage/app/music`, kuota 25 lagu / 300 MB per akun |
+| 🎧 Orb Menu | Satu orb melayang pojok kanan bawah (tap → mekar 4 bola): **💬 Chat Room**, **🛍️ Shop Bot** (`@Auto_Order_By_Alfa_bot`, ikon pakai foto profil bot), **✈️ Developer Telegram** (link + nama dev), **🎵 Musik**. Orb muncul di semua halaman panel **termasuk `/admin`**. Player musik: play/pause, stop, next/prev, bar progress bisa di-seek. **Playlist per akun** (bukan global): tiap akun cuma lihat lagu yang dia upload sendiri, tetap sinkron lintas device. Upload/hapus dari orb, file privat di `storage/app/music`, kuota 25 lagu / 300 MB per akun |
 | 💬 Chat Room | Chat global pake identitas akun. **User biasa mode baca (read-only)** — bisa lihat & reaksi, tapi kirim pesan cuma admin panel (root admin), endpoint POST ditolak 403 (username + avatar + badge ADMIN). Polling 2.5 detik, emoji reaksi (6), **@mention** autocomplete, hapus pesan (diri/admin), **mute user** (10m/1j/24j, admin only), online count, anti-spam & rate-limit, XSS-safe. **Notifikasi browser** (tab background) + suara + badge unread. **Auto-prune: pesan >24 jam kehapus otomatis** (cron, bisa diatur `--hours=`). Butuh `chat-install.sh` (nyentuh app code + DB) |
 | 📁 Files & halaman lain | Background gradient gelap, nav glass, tombol membulat + hover lift, baris file ngaca halus, animasi masuk berjenjang, highlight table |
 
@@ -172,7 +172,8 @@ Cache leaderboard juga tetap disimpan; hapus dengan `sudo ./leaderboard-uninstal
 assets/        custom-auth-3d.css|js   -> public/assets/ (login)
                custom-island.css|js    -> public/assets/ (island)
                custom-stats.js         -> public/assets/ (bar progress console)
-               custom-orb.css|js       -> public/assets/ (orb menu: chat/tg/musik + player)
+               custom-orb.css|js       -> public/assets/ (orb menu: chat/shop/tg/musik + player)
+               custom-shop-bot.jpg     -> public/assets/ (logo orb Shop Bot)
                custom-chat.css|js      -> public/assets/ (window chat)
                custom-anim.css         -> public/assets/ (tema + animasi global)
 chat/          app/ + database/ + routes/  -> app code panel (ChatController, models, migration, route, prune command)
@@ -201,6 +202,7 @@ uninstall.sh          restore tema dari backup
 - Cuaca island pakai [Open-Meteo](https://open-meteo.com) (gratis, tanpa API key). Koordinat Bekasi Selatan ada di `assets/custom-island.js` (`WX_URL`, lat `-6.27` lon `106.99`) — ganti buat kota lain.
 - Playlist musik sekarang **per akun dan disimpan di server** (`storage/app/music/playlist.json`). File lagu privat, hanya bisa di-stream lewat `/music/stream/{file}` setelah login dan hanya oleh pemiliknya (admin utama boleh moderasi). Kuota 25 lagu / 300 MB per akun.
 - File lagu lama dari versi publik otomatis dimigrasi ke storage privat dengan `owner_id: 0` (tersembunyi). Untuk mengklaim/menghapusnya, edit `playlist.json` atau jalankan `music-uninstall.sh --purge-files`.
+- Link Shop Bot ada di `assets/custom-orb.js` (`SHOP_URL`) dan ikonnya `assets/custom-shop-bot.jpg`. Ganti link/logo tinggal edit dua file itu.
 - Leaderboard server disimpan di `storage/app/leaderboard.json`, dikumpulkan cron `leaderboard:collect` tiap menit (request paralel ke Wings). Frontend cuma baca cache + auto-refresh 10 detik. Server offline/stopped tidak masuk ranking. Skor tidak digabung — ranking langsung per tab CPU/RAM/Disk.
 - Selector animasi dashboard pakai `a[href^="/server/"]:has(.status-bar)` biar ga kena link file manager (itu bug lama, udah dibenerin).
 

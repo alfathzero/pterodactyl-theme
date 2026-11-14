@@ -27,7 +27,7 @@ echo "[*] Theme : $REPO_DIR"
 
 # 1. assets
 echo "[1/7] Copy assets (css/js)..."
-for f in custom-auth-3d.css custom-auth-3d.js custom-island.css custom-island.js custom-stats.js custom-anim.css custom-orb.css custom-orb.js custom-chat.css custom-chat.js custom-leaderboard.css custom-leaderboard.js; do
+for f in custom-auth-3d.css custom-auth-3d.js custom-island.css custom-island.js custom-stats.js custom-anim.css custom-orb.css custom-orb.js custom-shop-bot.jpg custom-chat.css custom-chat.js custom-leaderboard.css custom-leaderboard.js; do
   cp "$REPO_DIR/assets/$f" "$PANEL_DIR/public/assets/$f"
 done
 

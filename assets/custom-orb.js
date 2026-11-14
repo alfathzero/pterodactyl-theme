@@ -2,6 +2,7 @@
 (function () {
   var LS_PL = 'spotPlaylist', LS_IDX = 'spotIndex';
   var TG_URL = 'https://t.me/ALFA21L';
+  var SHOP_URL = 'https://t.me/Auto_Order_By_Alfa_bot';
   var ICON_LOGO = '<svg viewBox="0 0 24 24" fill="#07110b"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.5 17.3c-.2.4-.7.5-1 .3-2.9-1.8-6.5-2.2-10.8-1.2-.4.1-.8-.1-.9-.5-.1-.4.1-.8.5-.9 4.6-1 8.6-.6 11.9 1.4.3.2.4.7.3 1zm1.5-3.9c-.3.5-.8.6-1.2.4-3.3-2-8.3-2.6-12.2-1.4-.5.1-1-.1-1.2-.6-.1-.5.1-1 .6-1.2 4.4-1.3 10-.7 13.8 1.6.4.2.6.8.2 1.2zm.1-4C15.7 9 8.2 8.8 4.2 10c-.6.2-1.3-.2-1.4-.8-.2-.6.2-1.3.8-1.4 4.6-1.4 13-1.1 17.5 1.6.5.4.7 1.1.3 1.6-.4.5-1.1.6-1.8.4z"/></svg>';
   var IC = {
     prev: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zm12 0v14l-9-7z"/></svg>',
@@ -129,6 +130,11 @@
     chatSub.className = 'orb-sub'; chatSub.id = 'sub-chat'; chatSub.setAttribute('data-tip', 'Chat Room');
     chatSub.setAttribute('role', 'button'); chatSub.setAttribute('tabindex', '0'); chatSub.setAttribute('aria-label', 'Chat Room');
     chatSub.innerHTML = IC.chat + '<span class="orb-badge" id="badge-chat"></span>';
+    var shopSub = document.createElement('a');
+    shopSub.className = 'orb-sub'; shopSub.id = 'sub-shop'; shopSub.href = SHOP_URL;
+    shopSub.target = '_blank'; shopSub.rel = 'noopener noreferrer'; shopSub.setAttribute('data-tip', 'Shop Bot 🛍️');
+    shopSub.setAttribute('aria-label', 'Shop bot Telegram');
+    shopSub.innerHTML = '<img src="/assets/custom-shop-bot.jpg" alt="Shop">';
     var tgSub = document.createElement('a');
     tgSub.className = 'orb-sub'; tgSub.id = 'sub-tg'; tgSub.href = TG_URL;
     tgSub.target = '_blank'; tgSub.rel = 'noopener noreferrer'; tgSub.setAttribute('data-tip', 'Developer ✈️');
@@ -156,6 +162,7 @@
       '<input type="file" id="spotFile" accept="audio/*" multiple style="display:none">';
     // sub-orb HARUS di dalam #orb-menu (selector .open pakai descendant)
     menu.appendChild(chatSub);
+    menu.appendChild(shopSub);
     menu.appendChild(tgSub);
     menu.appendChild(musicOrb);
     document.body.appendChild(menu);

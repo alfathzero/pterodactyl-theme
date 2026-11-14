@@ -23,8 +23,8 @@ REMOVE=0
 pick_ver() {
   grep -oE "$1\?v=[0-9]+" "$REPO_DIR/templates/base-core.blade.php" 2>/dev/null | head -n1 | sed 's/.*=//' || true
 }
-ORB_CSS_V="$(pick_ver 'custom-orb\.css')"; : "${ORB_CSS_V:=7}"
-ORB_JS_V="$(pick_ver 'custom-orb\.js')";  : "${ORB_JS_V:=13}"
+ORB_CSS_V="$(pick_ver 'custom-orb\.css')"; : "${ORB_CSS_V:=8}"
+ORB_JS_V="$(pick_ver 'custom-orb\.js')";  : "${ORB_JS_V:=14}"
 CHAT_CSS_V="$(pick_ver 'custom-chat\.css')"; : "${CHAT_CSS_V:=3}"
 CHAT_JS_V="$(pick_ver 'custom-chat\.js')";  : "${CHAT_JS_V:=5}"
 
@@ -48,7 +48,7 @@ fi
 [ -f "$ADMIN.bak-theme-admin" ] || cp "$ADMIN" "$ADMIN.bak-theme-admin"
 
 python3 - "$ADMIN" "$ORB_CSS_V" "$CHAT_CSS_V" "$ORB_JS_V" "$CHAT_JS_V" <<'PYEOF'
-import sys
+import re, sys
 p, oc, cc, oj, cj = sys.argv[1:6]
 src = open(p).read()
 changed = []
@@ -81,9 +81,19 @@ if "THEME-ADMIN-JS START" not in src:
     else:
         print("[!] </body> ga ketemu — JS admin dilewati")
 
+# selalu sinkronin versi asset (biar upgrade tema langsung kepakai di /admin)
+synced = src
+synced = re.sub(r'/assets/custom-orb\.css\?v=\d+', f'/assets/custom-orb.css?v={oc}', synced)
+synced = re.sub(r'/assets/custom-chat\.css\?v=\d+', f'/assets/custom-chat.css?v={cc}', synced)
+synced = re.sub(r'/assets/custom-orb\.js\?v=\d+', f'/assets/custom-orb.js?v={oj}', synced)
+synced = re.sub(r'/assets/custom-chat\.js\?v=\d+', f'/assets/custom-chat.js?v={cj}', synced)
+if synced != src:
+    changed.append("versi asset")
+    src = synced
+
 if changed:
     open(p, "w").write(src)
-    print("[*] Patch orb admin dipasang: " + ", ".join(changed))
+    print("[*] Patch orb admin dipasang/diupdate: " + ", ".join(changed))
 else:
     print("[*] Patch orb admin udah ada, skip")
 PYEOF
