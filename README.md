@@ -9,10 +9,9 @@ Dibuat buat **alfa-marketdua-officialss.alfamarket2.my.id** — bebas dipakai ul
 | Bagian | Fitur |
 |---|---|
 | 🔐 Halaman Login | Background globe titik 3D muter (canvas, tanpa CDN), ripple + gelombang kejut pas disentuh, globe spin kick, 2 orbit ring + satelit, card 3D tilt ngikutin mouse/jari |
-| 🏝 Dynamic Island | Pil melayang ala iPhone: jam live WIB (`Asia/Jakarta`) + cuaca real-time (Open-Meteo, koordinat Bekasi Selatan). Bisa digeser kanan-kiri (posisi keingat), usap ke atas buat sembunyi, usap dari tepi atas / tap handle buat manggil |
 | 🖥 Dashboard | Daftar server jadi glass card, avatar icon gradient ungu, server ON glow hijau napas + bar status pulse, di HP tampil detail IP, CPU%, RAM, Disk per server |
 | 📊 Console | Kotak stats (Address/Uptime/CPU/Memory/Disk/Network) jadi glowing glass + **bar progress live** warna ijo→kuning→merah + grafik blok ikut ngaca |
-| 🧩 Widget Dashboard | 4 kartu glass di atas daftar server: **🌐 Status Jaringan** (total/online/offline + sparkline 60 menit), **🖥️ Server Saya** (status online + klik ke console, list bisa di-scroll), **📊 Kuota Resource** (RAM/disk terpakai; kalau limit 0 tampil badge "Unlimited" tanpa bar penuh), **👥 Traffic Pengunjung** (pengunjung online 5 menit terakhir, pengunjung hari ini, jumlah kunjungan, pengunjung 7 hari, sparkline 24 jam). Plus **banner pengumuman/promo** yang bisa diatur dari `/admin` → Widget & Pengumuman, tampil di **dashboard dan semua halaman server** (console, files, dll), lengkap dengan **notifikasi browser** (user diminta izin; notif muncul sekali per pengumuman, klik notif fokus ke panel + sorot banner) |
+| 🧩 Widget Dashboard | 4 kartu glass di atas daftar server: **🌐 Status Jaringan** (total/online/offline + sparkline 60 menit), **🖥️ Server Saya** (status online + klik ke console, list bisa di-scroll), **📊 Kuota Resource** (RAM/disk terpakai; kalau limit 0 tampil badge "Unlimited" tanpa bar penuh), **👥 Traffic Pengunjung** (pengunjung online 5 menit terakhir, pengunjung hari ini, jumlah kunjungan, pengunjung 7 hari, sparkline 24 jam). Plus **island pengumuman/promo** ala pil iPhone yang bisa diatur dari `/admin` → Widget & Pengumuman: tap buat buka detail, tombol **X** buat hapus pengumuman buat user itu, tampil di **dashboard dan semua halaman server** (console, files, dll), lengkap dengan **notifikasi browser** (user diminta izin; notif muncul sekali per pengumuman, klik notif fokus ke panel + buka island) |
 | 🏆 Leaderboard | Ikon trophy di navbar dashboard → modal **Top 10/20 server** berdasarkan pemakaian **CPU / RAM / Disk** live. Global semua server panel, server offline disembunyikan, auto-refresh 10 detik. Data dikumpulkan background tiap menit lewat `leaderboard:collect` |
 | 🎧 Orb Menu | Satu orb melayang pojok kanan bawah (tap → mekar 4 bola): **💬 Chat Room**, **🛍️ Shop Bot** (`@Auto_Order_By_Alfa_bot`, ikon pakai foto profil bot), **✈️ Developer Telegram** (link + nama dev), **🎵 Musik**. Orb muncul di semua halaman panel **termasuk `/admin`**. Player musik: play/pause, stop, next/prev, bar progress bisa di-seek. **Playlist per akun** (bukan global): tiap akun cuma lihat lagu yang dia upload sendiri, tetap sinkron lintas device. Upload/hapus dari orb, file privat di `storage/app/music`, kuota 25 lagu / 300 MB per akun |
 | 💬 Chat Room | Chat global pake identitas akun. **Semua user login bisa kirim pesan** (maks 2000 karakter, rate limit 40/menit). Admin bisa hapus pesan & mute user (username + avatar + badge ADMIN). Polling 2.5 detik, emoji reaksi (6), **@mention** autocomplete, hapus pesan (diri/admin), **mute user** (10m/1j/24j, admin only), online count, anti-spam & rate-limit, XSS-safe. **Notifikasi browser** (tab background) + suara + badge unread. **Auto-prune: pesan >24 jam kehapus otomatis** (cron, bisa diatur `--hours=`). Butuh `chat-install.sh` (nyentuh app code + DB) |
@@ -112,7 +111,7 @@ sudo -u www-data php artisan view:clear
 | Navbar dashboard | Ikon 🏆 leaderboard → Top 10/20 CPU/RAM/Disk live |
 | Halaman server | Bar progress warna-warni di stats |
 | Pojok kanan bawah | Orb menu (tap → Chat Room 💬 / Shop Bot 🛍️ / Telegram ✈️ / Musik 🎵) |
-| `/admin` | Orb juga muncul + menu **Widget & Pengumuman** buat atur banner dashboard & halaman server |
+| `/admin` | Orb juga muncul + menu **Widget & Pengumuman** buat atur island pengumuman di dashboard & halaman server |
 | Orb → Musik | Upload lagu baru → muncul di playlist akun; hapus → hilang permanen setelah refresh |
 
 ---
@@ -154,8 +153,6 @@ Pengumuman dashboard juga tetap disimpan di `storage/app/announcement.json`. Hap
 |---|---|
 | `[!] Panel ga ketemu` | Jalanin pakai `PANEL_DIR=/lokasi/panel sudo -E ./install.sh` |
 | Tema muncul separo / lama | Cache view: `sudo -u www-data php artisan view:clear` + purge cache browser/Cloudflare |
-| Island ga muncul | Pastiin lu login sebagai user (halaman panel), bukan halaman admin lama; hard refresh |
-| Cuaca island ga muncul | HP ga bisa akses `api.open-meteo.com`? Cek koneksi/adblock |
 | Orb player ga mau muter lagu | Format harus mp3/m4a/ogg/wav/flac/aac dan ukuran maks 64 MB per file |
 | Musik 401 / minta login | Orb musik butuh login. Refresh halaman setelah login |
 | Musik 403 / "bukan milik akun" | Playlist memang per akun — lagu itu milik akun lain. Login yang benar |
@@ -169,8 +166,9 @@ Pengumuman dashboard juga tetap disimpan di `storage/app/announcement.json`. Hap
 | Widget dashboard ga muncul | `sudo ./widgets-install.sh` lagi habis upgrade panel, lalu hard refresh. Cek endpoint: `/widgets/data` harus balikin JSON |
 | Widget "Nunggu history collector" | Collector belum jalan 2x. Tunggu 1–2 menit atau tes `sudo -u www-data php artisan leaderboard:collect` |
 | Traffic pengunjung selalu 0 | Pastiin `CACHE_DRIVER=redis` dan Redis jalan. Cek `redis-cli ping`. Middleware `TrackVisitor` harus terdaftar di `app/Http/Kernel.php` (jalanin ulang `widgets-install.sh` kalau habis upgrade panel) |
-| Banner pengumuman ga muncul | Pastiin toggle **Tampilkan di dashboard** aktif dan tanggal berakhir belum lewat. Banner muncul di dashboard dan semua halaman server |
-| Banner ga muncul di halaman server | Hard refresh (asset `custom-widgets.js?v=6`). Kalau masih ga ada, cek console browser error + pastiin `/widgets/announcement` balikin JSON saat login |
+| Island pengumuman ga muncul | Pastiin toggle **Tampilkan di dashboard** aktif dan tanggal berakhir belum lewat. Island muncul di dashboard dan semua halaman server |
+| Island ga muncul di halaman server | Hard refresh (asset `custom-widgets.js?v=7`). Kalau masih ga ada, cek console browser error + pastiin `/widgets/announcement` balikin JSON saat login |
+| Pengumuman sudah di-X tapi muncul lagi | X nyimpen status tutup per user (`dw_dismiss_<id>`). Pengumuman bakal muncul lagi cuma kalau judul/isi diganti admin (ID baru) |
 | Prompt izin notifikasi ga muncul | Pastiin ada pengumuman aktif, buka dashboard, dan browser support Notification. Prompt cuma muncul sekali per sesi per pengumuman |
 | Notifikasi pengumuman ga masuk | Cek izin situs: ikon 🔒 / ⓘ di address bar → Notifikasi → **Izinkan**. Kalau pernah diblokir, harus diaktifin manual dari situ |
 | Notif cuma masuk pas panel kebuka | Itu batasan notifikasi lokal (service worker tanpa Web Push). Buat notif saat panel ditutup butuh VAPID + `minishlink/web-push` + tabel subscription |
@@ -184,12 +182,11 @@ Pengumuman dashboard juga tetap disimpan di `storage/app/announcement.json`. Hap
 
 ```
 assets/        custom-auth-3d.css|js   -> public/assets/ (login)
-               custom-island.css|js    -> public/assets/ (island)
                custom-stats.js         -> public/assets/ (bar progress console)
                custom-orb.css|js       -> public/assets/ (orb menu: chat/shop/tg/musik + player)
                custom-shop-bot.jpg     -> public/assets/ (logo orb Shop Bot)
                custom-chat.css|js      -> public/assets/ (window chat)
-               custom-widgets.css|js   -> public/assets/ (widget dashboard + banner + notifikasi)
+               custom-widgets.css|js   -> public/assets/ (widget dashboard + island pengumuman + notifikasi)
                custom-anim.css         -> public/assets/ (tema + animasi global)
 chat/          app/ + database/ + routes/  -> app code panel (ChatController, models, migration, route, prune command)
                sw-notify.js            -> public/sw-notify.js (service worker notifikasi chat + pengumuman)
@@ -221,7 +218,6 @@ uninstall.sh          restore tema dari backup
 ## Catatan
 
 - `templates/base-core.blade.php` mengandung blok **SANO NEON** (toast "Selamat Pagi/Siang/Malam, Hai <user> 👋" neon) di dalam `@section('container')`. Mau buang? Hapus bagian di antara `{{-- START: SANO NEON --}}` sampai `{{-- END: SANO NEON --}}`.
-- Cuaca island pakai [Open-Meteo](https://open-meteo.com) (gratis, tanpa API key). Koordinat Bekasi Selatan ada di `assets/custom-island.js` (`WX_URL`, lat `-6.27` lon `106.99`) — ganti buat kota lain.
 - Playlist musik sekarang **per akun dan disimpan di server** (`storage/app/music/playlist.json`). File lagu privat, hanya bisa di-stream lewat `/music/stream/{file}` setelah login dan hanya oleh pemiliknya (admin utama boleh moderasi). Kuota 25 lagu / 300 MB per akun.
 - File lagu lama dari versi publik otomatis dimigrasi ke storage privat dengan `owner_id: 0` (tersembunyi). Untuk mengklaim/menghapusnya, edit `playlist.json` atau jalankan `music-uninstall.sh --purge-files`.
 - Link Shop Bot ada di `assets/custom-orb.js` (`SHOP_URL`) dan ikonnya `assets/custom-shop-bot.jpg`. Ganti link/logo tinggal edit dua file itu.
@@ -238,12 +234,12 @@ uninstall.sh          restore tema dari backup
 
 ### Notifikasi pengumuman
 
-- **Banner pengumuman** tampil di dashboard **dan semua halaman server** (console, files, databases, dll). Di halaman server banner dipasang di atas konten utama (container 1200px), ikut render ulang saat pindah menu SPA, dan pakai kunci tutup yang sama (`dw_dismiss_<id>`) — kalau ditutup di dashboard, hilang juga di halaman server sampai isi pengumuman diganti.
-- Pas ada pengumuman aktif, user bakal lihat **modal izin notifikasi** di dashboard. Di halaman server, banner punya tombol **🔔 Aktifkan Notifikasi** (kalau izin masih default). Tombol itu memanggil `Notification.requestPermission()` — izin browser cuma bisa diminta lewat klik user, jadi nggak bisa dipaksa tanpa gesture.
+- **Island pengumuman** tampil melayang di atas (fixed, body-mounted) di dashboard **dan semua halaman server** (console, files, databases, dll). Tap header buat buka/tutup detail, tombol **X** buat hapus pengumuman buat user itu, dan status tutupnya pakai kunci yang sama (`dw_dismiss_<id>`) — kalau ditutup di dashboard, hilang juga di halaman server sampai isi pengumuman diganti.
+- Pas ada pengumuman aktif, user bakal lihat **modal izin notifikasi** di dashboard. Tombol **🔔 Aktifkan Notifikasi** ada di bagian detail island (kalau izin masih default). Tombol itu memanggil `Notification.requestPermission()` — izin browser cuma bisa diminta lewat klik user, jadi nggak bisa dipaksa tanpa gesture.
 - Setelah izin **granted**, notif browser muncul **sekali per ID pengumuman** (disimpan di `localStorage` key `dw_notif_seen_<id>`). Kalau admin ganti isi pengumuman, ID baru otomatis dibuat → notif muncul lagi.
-- Klik notif → service worker fokusin tab panel dan minta halaman aktif scroll + sorot banner pengumuman (`postMessage` tipe `pterowidget:open`), baik di dashboard maupun halaman server.
+- Klik notif → service worker fokusin tab panel dan minta halaman aktif buka + sorot island pengumuman (`postMessage` tipe `pterowidget:open`), baik di dashboard maupun halaman server.
 - Kalau izin **denied**, modal (dashboard) atau toast (halaman server) nampilin cara aktifin manual (ikon 🔒 / ⓘ di address bar → Notifikasi → Izinkan). Browser nggak ngasih prompt kedua.
-- Polling pengumuman di halaman selain dashboard pakai endpoint ringan `/widgets/announcement` tiap 60 detik, lalu banner di-render/di-refresh tanpa reload halaman.
+- Polling pengumuman di halaman selain dashboard pakai endpoint ringan `/widgets/announcement` tiap 60 detik, lalu island di-render/di-refresh tanpa reload halaman.
 - Mau kirim ulang notif buat pengumuman yang sama? Ubah sedikit judul/teksnya — admin otomatis bikin ID baru, jadi notif muncul lagi (notif cuma sekali per ID).
 - **Batasan:** ini notifikasi lokal lewat service worker, jadi cuma muncul **selama panel masih kebuka di suatu tab** (boleh di background). Notif saat panel ditutup total butuh **Web Push** (VAPID key, package `minishlink/web-push`, tabel subscription per user, queue worker).
 - `sw-notify.js` sudah punya handler `push` (siap dipakai kalau nanti Web Push dipasang), tapi belum ada subscription/VAPID jadi belum aktif.

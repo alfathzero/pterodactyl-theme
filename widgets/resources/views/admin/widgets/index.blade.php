@@ -5,7 +5,7 @@
 @endsection
 
 @section('content-header')
-    <h1>Widget &amp; Pengumuman<small>Atur banner promo / info di dashboard dan halaman server.</small></h1>
+    <h1>Widget &amp; Pengumuman<small>Atur island pengumuman promo / info di dashboard dan halaman server.</small></h1>
     <ol class="breadcrumb">
         <li><a href="{{ route('admin.index') }}">Admin</a></li>
         <li class="active">Widget &amp; Pengumuman</li>
@@ -112,7 +112,7 @@
     <div class="col-md-7">
         <div class="box box-primary">
             <div class="box-header with-border">
-                <h3 class="box-title">Banner Dashboard</h3>
+                <h3 class="box-title">Island Pengumuman</h3>
             </div>
             <form method="POST" action="{{ route('admin.widgets.update') }}" id="w-form" class="wg-form">
                 @csrf
@@ -200,8 +200,8 @@
                     <div class="wg-preview-text" id="w-preview-text">{{ !empty($announcement['text']) ? $announcement['text'] : 'Isi pengumuman muncul di sini.' }}</div>
                 </div>
                 <p class="help-block" style="margin-top:12px;">
-                    Preview update langsung pas lu ngetik. Banner muncul di paling atas dashboard user
-                    <b>dan di semua halaman server</b> (console, files, dll), bisa ditutup, dan bakal muncul
+                    Preview update langsung pas lu ngetik. Island muncul melayang di atas dashboard user
+                    <b>dan di semua halaman server</b> (console, files, dll), bisa ditutup pakai tombol X, dan bakal muncul
                     lagi kalau isinya diganti.
                 </p>
             </div>
@@ -214,7 +214,7 @@
             <div class="box-body">
                 <p>Pas pengumuman aktif, user bakal diminta <b>izin notifikasi browser</b>. Setelah diizinkan,
                    notif muncul sekali per pengumuman — termasuk kalau mereka lagi buka halaman server.</p>
-                <p class="text-muted">Klik notif bakal fokus ke panel dan sorot bannernya (dashboard maupun
+                <p class="text-muted">Klik notif bakal fokus ke panel dan buka island-nya (dashboard maupun
                    halaman server). Mau kirim ulang notif? Ubah sedikit judul/teks biar ID pengumuman baru.</p>
                 <p class="text-muted" style="margin-bottom:0;">Catatan: notif cuma jalan selama panel masih kebuka
                    di salah satu tab user. Notif saat panel ditutup total butuh Web Push (belum aktif).</p>

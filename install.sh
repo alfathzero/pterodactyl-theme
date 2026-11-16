@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ============================================================
 #  Pterodactyl Theme Pack installer
-#  (c) alfa-marketdua-officialss — dark glass theme + dynamic
-#  island + dotted globe login + live stats bars + orb musik
+#  (c) alfa-marketdua-officialss — dark glass theme + dotted
+#  globe login + live stats bars + orb musik
 #
 #  Cara pakai (jalankan sebagai root di server panel):
 #     ./install.sh
@@ -29,7 +29,7 @@ echo "[*] Theme : $REPO_DIR"
 
 # 1. assets
 echo "[1/8] Copy assets (css/js)..."
-for f in custom-auth-3d.css custom-auth-3d.js custom-island.css custom-island.js custom-stats.js custom-anim.css custom-orb.css custom-orb.js custom-shop-bot.jpg custom-chat.css custom-chat.js custom-leaderboard.css custom-leaderboard.js custom-widgets.css custom-widgets.js; do
+for f in custom-auth-3d.css custom-auth-3d.js custom-stats.js custom-anim.css custom-orb.css custom-orb.js custom-shop-bot.jpg custom-chat.css custom-chat.js custom-leaderboard.css custom-leaderboard.js custom-widgets.css custom-widgets.js; do
   cp "$REPO_DIR/assets/$f" "$PANEL_DIR/public/assets/$f"
 done
 
@@ -95,7 +95,7 @@ chown -R "$WEBUSER:$WEBUSER" "$PANEL_DIR/resources/views" "$PANEL_DIR/storage" "
 echo ""
 echo "[✓] Selesai! Hard refresh browser (Ctrl+Shift+R) atau Incognito."
 echo "    Login: globe titik 3D + efek sentuh"
-echo "    Panel: dynamic island (jam+cuaca), tema glass, animasi list"
+echo "    Panel: tema glass, animasi list, widget + island pengumuman"
 echo "    Orb: pojok kanan bawah, muncul juga di /admin"
 echo "    Musik: playlist per akun, file privat di storage/app/music"
 echo "    Chat Room (opsional): sudo ./chat-install.sh

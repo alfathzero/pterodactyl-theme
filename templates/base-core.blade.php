@@ -3,12 +3,11 @@
 ])
 
 @section('assets')
-    <link rel="stylesheet" href="/assets/custom-island.css?v=7">
     <link rel="stylesheet" href="/assets/custom-anim.css?v=12">
     <link rel="stylesheet" href="/assets/custom-orb.css?v=8">
     <link rel="stylesheet" href="/assets/custom-chat.css?v=3">
     <link rel="stylesheet" href="/assets/custom-leaderboard.css?v=3">
-    <link rel="stylesheet" href="/assets/custom-widgets.css?v=6">
+    <link rel="stylesheet" href="/assets/custom-widgets.css?v=7">
 @endsection
 
 @section('container')
@@ -143,10 +142,9 @@
 
 @section('scripts')
     @parent
-    <script src="/assets/custom-island.js?v=7"></script>
     <script src="/assets/custom-stats.js?v=2"></script>
     <script src="/assets/custom-orb.js?v=15"></script>
     <script src="/assets/custom-chat.js?v=7"></script>
     <script src="/assets/custom-leaderboard.js?v=3"></script>
-    <script src="/assets/custom-widgets.js?v=6"></script>
+    <script src="/assets/custom-widgets.js?v=7"></script>
 @endsection

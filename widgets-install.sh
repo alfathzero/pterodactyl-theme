@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 #  Widget installer — status jaringan, server saya, kuota,
-#  traffic pengunjung + banner pengumuman (pterodactyl-theme)
+#  traffic pengunjung + island pengumuman (pterodactyl-theme)
 #
 #  Jalankan SETELAH ./install.sh :
 #     sudo ./widgets-install.sh
@@ -166,7 +166,7 @@ if "custom-widgets.css" not in src:
                    '<link rel="stylesheet" href="/assets/custom-chat.css?v=3">',
                    '<link rel="stylesheet" href="/assets/custom-orb.css?v=8">'):
         if anchor in src:
-            src = src.replace(anchor, anchor + '\n    <link rel="stylesheet" href="/assets/custom-widgets.css?v=6">', 1)
+            src = src.replace(anchor, anchor + '\n    <link rel="stylesheet" href="/assets/custom-widgets.css?v=7">', 1)
             changed.append("CSS")
             break
 if "custom-widgets.js" not in src:
@@ -174,7 +174,7 @@ if "custom-widgets.js" not in src:
                    '<script src="/assets/custom-chat.js?v=7"></script>',
                    '<script src="/assets/custom-orb.js?v=15"></script>'):
         if anchor in src:
-            src = src.replace(anchor, anchor + '\n    <script src="/assets/custom-widgets.js?v=6"></script>', 1)
+            src = src.replace(anchor, anchor + '\n    <script src="/assets/custom-widgets.js?v=7"></script>', 1)
             changed.append("JS")
             break
 if changed:

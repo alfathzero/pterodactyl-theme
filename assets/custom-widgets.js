@@ -1,5 +1,5 @@
 // Widget dashboard (pterodactyl-theme) — status jaringan, server saya,
-// kuota resource, traffic pengunjung + banner pengumuman.
+// kuota resource, traffic pengunjung + island pengumuman.
 (function () {
   'use strict';
 
@@ -24,7 +24,9 @@
     notifyModalMode: null,
     notifyToast: null,
     permissionBusy: false,
-    globalBanner: null,
+    island: null,
+    islandId: null,
+    islandExpanded: false,
     seen: {},
     prompted: {},
     toastShown: {},
@@ -388,20 +390,18 @@
     if (!a || (!a.title && !a.text)) {
       closeNotifyModal();
       removeNotifyToast();
-      removeGlobalBanner();
+      removeAnnouncementIsland();
       return;
     }
 
+    renderAnnouncementIsland(a);
+
+    if (!notifySupported()) return;
+    registerNotifySW();
     if (isDashboard()) {
-      removeGlobalBanner();
-      if (!notifySupported()) return;
-      registerNotifySW();
       maybePromptNotify(a);
-    } else {
-      renderGlobalBanner(a);
-      if (!notifySupported()) return;
-      registerNotifySW();
-      if (notifyPermission() === 'granted') showAnnouncementNotification(a);
+    } else if (notifyPermission() === 'granted') {
+      showAnnouncementNotification(a);
     }
   }
 
@@ -412,73 +412,209 @@
   }
 
   function refreshAnnouncementViews() {
-    if (isDashboard()) {
-      refreshWidgets();
-    } else if (state.announcement) {
-      renderGlobalBanner(state.announcement);
-    }
+    if (state.announcement) renderAnnouncementIsland(state.announcement, true);
+    if (isDashboard()) refreshWidgets();
   }
 
-  function removeGlobalBanner() {
-    if (state.globalBanner && state.globalBanner.parentNode) {
-      state.globalBanner.parentNode.removeChild(state.globalBanner);
+  function removeAnnouncementIsland() {
+    if (state.island && state.island.parentNode) {
+      state.island.parentNode.removeChild(state.island);
     }
-    state.globalBanner = null;
-    var existing = document.getElementById('global-announcement');
+    state.island = null;
+    state.islandId = null;
+    var existing = document.getElementById('dw-announcement-island');
     if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
   }
 
-  function renderGlobalBanner(a) {
-    if (isDashboard()) {
-      removeGlobalBanner();
+  function announcementDismissed(a) {
+    if (!a || !a.id) return false;
+    return localGet('dw_dismiss_' + a.id) === '1';
+  }
+
+  function dismissAnnouncement(a) {
+    if (a && a.id) localSet('dw_dismiss_' + a.id, '1');
+    removeAnnouncementIsland();
+    closeNotifyModal();
+    removeNotifyToast();
+  }
+
+  function announcementType(a) {
+    return a && (a.type === 'promo' || a.type === 'maintenance') ? a.type : 'info';
+  }
+
+  function announcementIcon(type) {
+    return type === 'promo' ? '🎉' : type === 'maintenance' ? '🛠️' : '📢';
+  }
+
+  function announcementPreview(a) {
+    var text = String((a && a.text) || '').replace(/\s+/g, ' ').trim();
+    if (!text) return 'Klik buat lihat detail';
+    return text.length > 90 ? text.slice(0, 87) + '...' : text;
+  }
+
+  function notifyControls(a) {
+    if (!notifySupported()) return null;
+
+    var permission = notifyPermission();
+    var row = el('div', 'dw-ai-notify');
+
+    if (permission === 'granted') {
+      row.appendChild(el('span', 'dw-ai-notify-on', '🔔 Notifikasi aktif'));
+      return row;
+    }
+
+    var btn = el('button', 'dw-notify-btn' + (permission === 'denied' ? ' denied' : ''),
+      permission === 'denied' ? '🔕 Notif diblokir' : '🔔 Aktifkan notifikasi');
+    btn.type = 'button';
+    btn.addEventListener('click', function (ev) {
+      if (ev && ev.stopPropagation) ev.stopPropagation();
+      if (permission === 'denied') {
+        if (isDashboard()) showNotifyModal(a, 'denied');
+        else showNotifyToast(a, 'denied', true);
+      } else {
+        requestNotifyPermission(a);
+      }
+    });
+    row.appendChild(btn);
+
+    if (permission === 'denied') {
+      row.appendChild(el('span', 'dw-ai-note', 'Aktifkan manual di setelan situs'));
+    }
+    return row;
+  }
+
+  function renderAnnouncementIsland(a, force) {
+    if (!a || (!a.title && !a.text) || announcementDismissed(a)) {
+      removeAnnouncementIsland();
       return;
     }
-    if (!a || (!a.title && !a.text)) {
-      removeGlobalBanner();
+
+    var id = String(a.id || 'default');
+    var existing = state.island;
+    var same = existing && state.islandId === id && existing.parentNode;
+
+    if (same && !force) {
+      var untilNode = existing.querySelector ? existing.querySelector('.dw-ai-until') : null;
+      if (untilNode) {
+        var untilText = humanUntil(a.until);
+        untilNode.textContent = untilText;
+        untilNode.style.display = untilText ? '' : 'none';
+      }
       return;
     }
 
-    var container = findContentContainer();
-    if (!container) return;
+    var expanded = same ? state.islandExpanded : false;
+    removeAnnouncementIsland();
 
-    var root = state.globalBanner;
-    if (!root || !container.contains(root)) {
-      var existing = document.getElementById('global-announcement');
-      if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+    var type = announcementType(a);
+    var island = el('div', 'dw-ai dw-ai-' + type + (expanded ? ' dw-ai-expanded' : ''));
+    island.id = 'dw-announcement-island';
+    island.setAttribute('role', 'status');
+    island.setAttribute('aria-live', 'polite');
 
-      root = el('div', 'dw-root dw-global-root');
-      root.id = 'global-announcement';
-      container.insertBefore(root, container.firstChild);
-      state.globalBanner = root;
+    var head = el('div', 'dw-ai-head');
+    head.setAttribute('role', 'button');
+    head.setAttribute('tabindex', '0');
+    head.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    head.setAttribute('aria-label', 'Buka detail pengumuman');
+
+    head.appendChild(el('span', 'dw-ai-icon', announcementIcon(type)));
+
+    var main = el('div', 'dw-ai-main');
+    main.appendChild(el('span', 'dw-ai-title', a.title || 'Pengumuman baru'));
+    main.appendChild(el('span', 'dw-ai-sub', announcementPreview(a)));
+    head.appendChild(main);
+
+    var untilText = humanUntil(a.until);
+    var until = el('span', 'dw-ai-until', untilText);
+    if (!untilText) until.style.display = 'none';
+    head.appendChild(until);
+
+    var chevron = el('span', 'dw-ai-chevron', expanded ? '⌃' : '⌄');
+    head.appendChild(chevron);
+
+    var close = el('button', 'dw-ai-close', '×');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Hapus pengumuman ini');
+    close.addEventListener('click', function (ev) {
+      if (ev && ev.stopPropagation) ev.stopPropagation();
+      dismissAnnouncement(a);
+    });
+    head.appendChild(close);
+
+    island.appendChild(head);
+
+    var body = el('div', 'dw-ai-body');
+    var inner = el('div', 'dw-ai-body-inner');
+    if (a.text) inner.appendChild(el('div', 'dw-ai-text', a.text));
+
+    var actions = el('div', 'dw-ai-actions');
+    var controls = notifyControls(a);
+    if (controls) actions.appendChild(controls);
+
+    var dismiss = el('button', 'dw-ai-dismiss', 'Hapus pengumuman');
+    dismiss.type = 'button';
+    dismiss.addEventListener('click', function (ev) {
+      if (ev && ev.stopPropagation) ev.stopPropagation();
+      dismissAnnouncement(a);
+    });
+    actions.appendChild(dismiss);
+
+    inner.appendChild(actions);
+    body.appendChild(inner);
+    island.appendChild(body);
+
+    function toggle() {
+      state.islandExpanded = !state.islandExpanded;
+      if (state.islandExpanded) island.classList.add('dw-ai-expanded');
+      else island.classList.remove('dw-ai-expanded');
+      head.setAttribute('aria-expanded', state.islandExpanded ? 'true' : 'false');
+      chevron.textContent = state.islandExpanded ? '⌃' : '⌄';
     }
 
-    var banner = announcementBanner(a);
-    if (!banner) {
-      removeGlobalBanner();
-      return;
-    }
+    head.addEventListener('click', function (ev) {
+      if (ev && ev.target && ev.target.closest && ev.target.closest('.dw-ai-close')) return;
+      toggle();
+    });
+    head.addEventListener('keydown', function (ev) {
+      if (ev.target && ev.target.closest && ev.target.closest('.dw-ai-close')) return;
+      if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+        ev.preventDefault();
+        toggle();
+      }
+    });
 
-    root.textContent = '';
-    root.appendChild(banner);
+    document.body.appendChild(island);
+    state.island = island;
+    state.islandId = id;
+    state.islandExpanded = expanded;
   }
 
   function focusAnnouncement() {
-    if (!isDashboard()) {
-      window.location.href = '/';
+    var a = state.announcement || (state.data && state.data.announcement);
+    if (!a) {
+      if (isDashboard()) load(true);
+      else pollAnnouncement();
       return;
     }
-    var a = state.announcement || (state.data && state.data.announcement);
-    if (a && a.id) {
+    if (a.id) {
       try { window.localStorage.removeItem('dw_dismiss_' + a.id); } catch (e) { /* ignore */ }
     }
-    refreshWidgets();
-    var banner = state.root && state.root.querySelector ? state.root.querySelector('.dw-banner') : null;
-    if (banner) {
-      if (banner.classList && banner.classList.add) banner.classList.add('dw-banner-flash');
-      if (banner.scrollIntoView) {
-        try { banner.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) { banner.scrollIntoView(); }
-      }
+    state.islandExpanded = true;
+    renderAnnouncementIsland(a, true);
+    if (state.island) {
+      state.island.classList.add('dw-ai-expanded');
+      state.island.classList.add('dw-ai-flash');
+      var head = state.island.querySelector ? state.island.querySelector('.dw-ai-head') : null;
+      if (head) head.setAttribute('aria-expanded', 'true');
+      var chevron = state.island.querySelector ? state.island.querySelector('.dw-ai-chevron') : null;
+      if (chevron) chevron.textContent = '⌃';
+      window.setTimeout(function () {
+        if (state.island) state.island.classList.remove('dw-ai-flash');
+      }, 2200);
     }
+    if (isDashboard()) refreshWidgets();
+    else pollAnnouncement();
   }
 
   function pollAnnouncement() {
@@ -507,7 +643,7 @@
     var divs = app.querySelectorAll('div');
     for (var i = 0; i < divs.length; i++) {
       var div = divs[i];
-      if (div.id === 'global-announcement') continue;
+      if (div.id === 'dw-announcement-island') continue;
 
       var style = window.getComputedStyle(div);
       if (style.maxWidth !== '1200px') continue;
@@ -637,7 +773,7 @@
     var card = el('div', 'dw-card');
     card.appendChild(head('⚠️', 'Widget'));
     card.appendChild(el('div', 'dw-empty', 'Gagal memuat data widget.'));
-    var btn = el('button', 'dw-banner-close', '↻');
+    var btn = el('button', 'dw-icon-btn', '↻');
     btn.style.position = 'absolute';
     btn.style.right = '14px';
     btn.style.top = '14px';
@@ -666,76 +802,12 @@
   function render(root, data) {
     root.textContent = '';
 
-    var banner = announcementBanner(data.announcement);
-    if (banner) root.appendChild(banner);
-
     var grid = el('div', 'dw-grid');
     grid.appendChild(networkCard(data.network || {}));
     grid.appendChild(myServersCard(data.my_servers || [], Number(data.my_servers_total) || (data.my_servers || []).length));
     grid.appendChild(quotaCard(data.quota || {}));
     grid.appendChild(trafficCard(data.traffic || {}));
     root.appendChild(grid);
-  }
-
-  /* ---------------- banner ---------------- */
-
-  function announcementBanner(a) {
-    if (!a || (!a.title && !a.text)) return null;
-
-    var key = 'dw_dismiss_' + a.id;
-    try {
-      if (window.localStorage.getItem(key) === '1') return null;
-    } catch (e) { /* localStorage bisa diblokir */ }
-
-    var type = a.type === 'promo' || a.type === 'maintenance' ? a.type : 'info';
-    var banner = el('div', 'dw-banner dw-' + type);
-
-    var icon = type === 'promo' ? '🎉' : type === 'maintenance' ? '🛠️' : '📢';
-    banner.appendChild(el('span', 'dw-banner-icon', icon));
-
-    var body = el('div', 'dw-banner-body');
-    if (a.title) body.appendChild(el('strong', 'dw-banner-title', a.title));
-    if (a.text) body.appendChild(el('div', 'dw-banner-text', a.text));
-
-    if (notifySupported()) {
-      var permission = notifyPermission();
-      var notifyRow = el('div', 'dw-banner-notify');
-      if (permission === 'granted') {
-        notifyRow.appendChild(el('span', 'dw-banner-notify-on', '🔔 Notifikasi aktif'));
-      } else {
-        var nbtn = el('button', 'dw-notify-btn' + (permission === 'denied' ? ' denied' : ''),
-          permission === 'denied' ? '🔕 Notif diblokir' : '🔔 Aktifkan notifikasi');
-        nbtn.addEventListener('click', function () {
-          if (permission === 'denied') {
-            if (isDashboard()) showNotifyModal(a, 'denied');
-            else showNotifyToast(a, 'denied', true);
-          } else {
-            requestNotifyPermission(a);
-          }
-        });
-        notifyRow.appendChild(nbtn);
-        if (permission === 'denied') {
-          notifyRow.appendChild(el('span', 'dw-banner-note', 'Aktifkan manual di setelan situs'));
-        }
-      }
-      body.appendChild(notifyRow);
-    }
-    banner.appendChild(body);
-
-    var until = humanUntil(a.until);
-    if (until) banner.appendChild(el('span', 'dw-banner-until', until));
-
-    var close = el('button', 'dw-banner-close', '×');
-    close.setAttribute('aria-label', 'Tutup pengumuman');
-    close.addEventListener('click', function () {
-      try { window.localStorage.setItem(key, '1'); } catch (e) { /* ignore */ }
-      var parent = banner.parentNode;
-      if (parent) parent.removeChild(banner);
-      if (parent && parent === state.globalBanner) removeGlobalBanner();
-    });
-    banner.appendChild(close);
-
-    return banner;
   }
 
   /* ---------------- status jaringan ---------------- */
@@ -979,11 +1051,11 @@
       if (!isDashboard()) {
         removeRoot();
         closeNotifyModal();
-        renderGlobalBanner(state.announcement);
+        renderAnnouncementIsland(state.announcement);
         return;
       }
       removeNotifyToast();
-      removeGlobalBanner();
+      renderAnnouncementIsland(state.announcement);
       var root = ensureRoot();
       if (!root) return;
       if (state.data) {
@@ -1001,7 +1073,7 @@
     state.observer = new MutationObserver(function () {
       if (isDashboard()) {
         if (!state.root || !document.body.contains(state.root)) scheduleMount();
-      } else if (state.announcement && (!state.globalBanner || !document.body.contains(state.globalBanner))) {
+      } else if (state.announcement && (!state.island || !document.body.contains(state.island))) {
         scheduleMount();
       }
     });
