@@ -165,6 +165,7 @@ Pengumuman dashboard juga tetap disimpan di `storage/app/announcement.json`. Hap
 | Leaderboard 404 setelah upgrade panel | `sudo ./leaderboard-install.sh` lagi (route + cron ke-timpa upgrade) |
 | Widget dashboard ga muncul | `sudo ./widgets-install.sh` lagi habis upgrade panel, lalu hard refresh. Cek endpoint: `/widgets/data` harus balikin JSON |
 | Widget "Nunggu history collector" | Collector belum jalan 2x. Tunggu 1–2 menit atau tes `sudo -u www-data php artisan leaderboard:collect` |
+| Status Jaringan 0 online padahal server jalan | Collector gagal ambil data Wings. Cek cron `leaderboard:collect` / jalanin manual. Collector sekarang nggak nimpa data lama kalau semua request Wings gagal |
 | Traffic pengunjung selalu 0 | Pastiin `CACHE_DRIVER=redis` dan Redis jalan. Cek `redis-cli ping`. Middleware `TrackVisitor` harus terdaftar di `app/Http/Kernel.php` (jalanin ulang `widgets-install.sh` kalau habis upgrade panel) |
 | Island pengumuman ga muncul | Pastiin toggle **Tampilkan di dashboard** aktif dan tanggal berakhir belum lewat. Island muncul di dashboard dan semua halaman server |
 | Island ga muncul di halaman server | Hard refresh (asset `custom-widgets.js?v=7`). Kalau masih ga ada, cek console browser error + pastiin `/widgets/announcement` balikin JSON saat login |

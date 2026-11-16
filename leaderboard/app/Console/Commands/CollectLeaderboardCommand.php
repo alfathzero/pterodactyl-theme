@@ -108,6 +108,26 @@ class CollectLeaderboardCommand extends Command
             ];
 
             $path = storage_path('app/leaderboard.json');
+
+            // Jangan timpa data bagus dengan hasil kosong kalau ada request Wings
+            // yang gagal. Kalau semua server memang offline, Wings tetap jawab
+            // (errors = 0), jadi data kosong tetap valid dan tetap ditulis.
+            $previousOnline = 0;
+            if (is_file($path)) {
+                $previous = json_decode((string) @file_get_contents($path), true);
+                if (is_array($previous) && isset($previous['servers']) && is_array($previous['servers'])) {
+                    $previousOnline = count($previous['servers']);
+                }
+            }
+            if (count($rows) === 0 && $errors > 0 && $previousOnline > 0) {
+                $this->warn(sprintf(
+                    'leaderboard:collect -> 0 server online, %d gagal; data lama (%d online) dipertahankan',
+                    $errors,
+                    $previousOnline
+                ));
+                return self::SUCCESS;
+            }
+
             $tmp = $path . '.tmp';
             file_put_contents($tmp, json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
             @chmod($tmp, 0644);
