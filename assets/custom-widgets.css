@@ -467,6 +467,14 @@
 .dw-bar.hot > i { background: linear-gradient(90deg, #f87171, #ef4444); box-shadow: 0 0 10px rgba(248, 113, 113, 0.5); }
 
 
+/* ---------- traffic pengunjung ---------- */
+.dw-traffic .dw-big-num {
+  background: linear-gradient(120deg, #c084fc, #22d3ee);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 /* ---------- node health ---------- */
 .dw-nodes { display: flex; flex-direction: column; gap: 7px; }
 .dw-node {

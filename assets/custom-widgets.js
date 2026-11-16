@@ -1,5 +1,5 @@
 // Widget dashboard (pterodactyl-theme) — status jaringan, server saya,
-// kuota resource, node health + banner pengumuman.
+// kuota resource, traffic pengunjung + banner pengumuman.
 (function () {
   'use strict';
 
@@ -673,7 +673,7 @@
     grid.appendChild(networkCard(data.network || {}));
     grid.appendChild(myServersCard(data.my_servers || [], Number(data.my_servers_total) || (data.my_servers || []).length));
     grid.appendChild(quotaCard(data.quota || {}));
-    grid.appendChild(nodesCard(data.nodes || []));
+    grid.appendChild(trafficCard(data.traffic || {}));
     root.appendChild(grid);
   }
 
@@ -775,10 +775,16 @@
     return node;
   }
 
-  function sparkline(history) {
+  function sparkline(history, emptyText) {
     var wrap = el('div', 'dw-spark');
     if (!history || history.length < 2) {
-      wrap.appendChild(el('span', 'dw-muted', 'Nunggu history collector...'));
+      wrap.appendChild(el('span', 'dw-muted', emptyText || 'Nunggu history collector...'));
+      return wrap;
+    }
+
+    var total = history.reduce(function (sum, value) { return sum + (Number(value) || 0); }, 0);
+    if (total <= 0) {
+      wrap.appendChild(el('span', 'dw-muted', emptyText || 'Nunggu history collector...'));
       return wrap;
     }
 
@@ -931,50 +937,36 @@
     return group;
   }
 
-  /* ---------------- node health ---------------- */
+  /* ---------------- traffic pengunjung ---------------- */
 
-  function nodesCard(nodes) {
-    var onlineNodes = nodes.filter(function (n) { return n.wings === 'online'; }).length;
-    var cardNode = card('🛰️', 'Node Health',
-      nodes.length ? onlineNodes + '/' + nodes.length : null,
-      nodes.length && onlineNodes < nodes.length ? 'off' : '');
-
-    if (!nodes.length) {
-      cardNode.appendChild(el('div', 'dw-empty', 'Belum ada node terdaftar.'));
-      return cardNode;
+  function fmtNum(value) {
+    value = Number(value) || 0;
+    if (value >= 1000000) {
+      return (value / 1000000).toFixed(value >= 10000000 ? 0 : 1).replace(/\.0$/, '') + 'M';
     }
+    if (value >= 1000) {
+      return (value / 1000).toFixed(value >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'K';
+    }
+    return String(value);
+  }
 
-    var wrap = el('div', 'dw-nodes');
-    nodes.forEach(function (node) {
-      var row = el('div', 'dw-node');
+  function trafficCard(t) {
+    var online = Number(t.online) || 0;
+    var cardNode = card('👥', 'Traffic Pengunjung', online > 0 ? online + ' online' : 'LIVE');
+    cardNode.classList.add('dw-traffic');
 
-      var dotClass = node.maintenance ? ' sus' : node.wings === 'online' ? ' on' : '';
-      row.appendChild(el('span', 'dw-dot' + dotClass));
+    var big = el('div', 'dw-big');
+    big.appendChild(el('span', 'dw-big-num', fmtNum(online)));
+    big.appendChild(el('span', 'dw-big-sub', ' pengunjung online'));
+    cardNode.appendChild(big);
 
-      var main = el('div', 'dw-node-main');
-      main.appendChild(el('div', 'dw-node-name', node.name || 'Node'));
-      var sub = node.wings === 'online' ? 'Wings online' : node.wings === 'offline' ? 'Wings offline' : 'Status unknown';
-      if (node.maintenance) sub = 'Maintenance · ' + sub;
-      main.appendChild(el('div', 'dw-node-sub', sub));
+    var meta = el('div', 'dw-meta');
+    meta.appendChild(chip('Hari ini', fmtNum(t.today_visitors)));
+    meta.appendChild(chip('Kunjungan', fmtNum(t.today_views)));
+    meta.appendChild(chip('7 hari', fmtNum(t.week_visitors)));
+    cardNode.appendChild(meta);
 
-      var alloc = [];
-      if (Number(node.memory) > 0) alloc.push(fmtBytes(Number(node.memory) * 1048576) + ' RAM');
-      if (Number(node.disk) > 0) alloc.push(fmtBytes(Number(node.disk) * 1048576) + ' disk');
-      if (alloc.length) main.appendChild(el('div', 'dw-node-alloc', 'Alokasi ' + alloc.join(' · ')));
-
-      row.appendChild(main);
-
-      var right = el('div', 'dw-node-right');
-      var on = el('div', 'dw-node-online');
-      on.appendChild(el('b', null, String(node.online || 0)));
-      on.appendChild(document.createTextNode(' / ' + (node.servers || 0)));
-      right.appendChild(on);
-      right.appendChild(el('div', 'dw-node-total', 'server online'));
-      row.appendChild(right);
-
-      wrap.appendChild(row);
-    });
-    cardNode.appendChild(wrap);
+    cardNode.appendChild(sparkline(t.history || [], 'Belum ada kunjungan hari ini'));
     return cardNode;
   }
 

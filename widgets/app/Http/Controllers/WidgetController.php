@@ -7,7 +7,7 @@ namespace Pterodactyl\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Redis;
 use Pterodactyl\Models\Node;
 use Pterodactyl\Models\Server;
 
@@ -33,7 +33,7 @@ class WidgetController extends Controller
 
         return new JsonResponse([
             'network' => $global['network'],
-            'nodes' => $global['nodes'],
+            'traffic' => $this->traffic(),
             'my_servers' => $myServers,
             'my_servers_total' => $myServersTotal,
             'quota' => $quota,
@@ -54,58 +54,29 @@ class WidgetController extends Controller
     }
 
     /**
-     * Data global (di-cache 60 detik): status jaringan + node health.
+     * Data global (di-cache 60 detik): status jaringan.
      */
     private function globalData(): array
     {
         $leaderboard = $this->leaderboard();
 
         $online = 0;
-        $perNode = [];
         foreach ($leaderboard['servers'] as $row) {
             $online++;
-            $nodeName = (string) ($row['node'] ?? '');
-            $perNode[$nodeName] = ($perNode[$nodeName] ?? 0) + 1;
         }
 
         $total = Server::withoutGlobalScopes()->count();
-
-        $nodes = Node::query()
-            ->withCount('servers')
-            ->orderBy('name')
-            ->get()
-            ->map(function (Node $node) use ($perNode) {
-                $token = null;
-                try {
-                    $config = $node->getConfiguration();
-                    $token = $config['token'] ?? null;
-                } catch (\Throwable $e) {
-                    $token = null;
-                }
-
-                return [
-                    'name' => $node->name,
-                    'servers' => (int) $node->servers_count,
-                    'online' => (int) ($perNode[$node->name] ?? 0),
-                    'maintenance' => (bool) $node->maintenance_mode,
-                    'wings' => $this->pingWings($node, $token),
-                    'memory' => (int) $node->memory,
-                    'disk' => (int) $node->disk,
-                ];
-            })
-            ->values()
-            ->all();
+        $nodes = Node::query()->count();
 
         return [
             'network' => [
                 'total' => (int) $total,
                 'online' => $online,
                 'offline' => max(0, (int) $total - $online),
-                'nodes' => count($nodes),
+                'nodes' => (int) $nodes,
                 'uptime_pct' => $total > 0 ? (int) round($online / $total * 100) : 0,
                 'history' => $this->history(),
             ],
-            'nodes' => $nodes,
         ];
     }
 
@@ -208,26 +179,53 @@ class WidgetController extends Controller
     }
 
     /**
-     * Cek Wings hidup/mati (cache 30 detik, timeout 2 detik).
+     * Traffic pengunjung panel (pageview + pengunjung unik) dari Redis.
+     *
+     * @return array<string, mixed>
      */
-    private function pingWings(Node $node, ?string $token): string
+    private function traffic(): array
     {
-        if (!$token) {
-            return 'unknown';
-        }
+        $empty = [
+            'online' => 0,
+            'today_visitors' => 0,
+            'today_views' => 0,
+            'week_visitors' => 0,
+            'week_views' => 0,
+            'history' => array_fill(0, 24, 0),
+        ];
 
-        return Cache::remember('widgets:wings:' . $node->id, 30, function () use ($node, $token) {
-            try {
-                $response = Http::withToken($token)
-                    ->withOptions(['verify' => false])
-                    ->timeout(2)
-                    ->get(sprintf('%s://%s:%d/api/system', $node->scheme, $node->fqdn, (int) $node->daemonListen));
+        try {
+            $redis = Redis::connection();
+            $now = time();
 
-                return $response->successful() ? 'online' : 'offline';
-            } catch (\Throwable $e) {
-                return 'offline';
+            $redis->zremrangebyscore('traffic:online', 0, $now - 300);
+            $online = (int) $redis->zcard('traffic:online');
+
+            $day = date('Y-m-d', $now);
+            $week = date('o-\WW', $now);
+
+            $todayViews = (int) $redis->get('traffic:views:d:' . $day);
+            $todayVisitors = (int) $redis->scard('traffic:uv:d:' . $day);
+            $weekViews = (int) $redis->get('traffic:views:w:' . $week);
+            $weekVisitors = (int) $redis->scard('traffic:uv:w:' . $week);
+
+            $history = [];
+            for ($i = 23; $i >= 0; $i--) {
+                $hour = date('Y-m-d\TH', $now - ($i * 3600));
+                $history[] = (int) $redis->get('traffic:views:h:' . $hour);
             }
-        });
+
+            return [
+                'online' => $online,
+                'today_visitors' => $todayVisitors,
+                'today_views' => $todayViews,
+                'week_visitors' => $weekVisitors,
+                'week_views' => $weekViews,
+                'history' => $history,
+            ];
+        } catch (\Throwable $e) {
+            return $empty;
+        }
     }
 
     /**

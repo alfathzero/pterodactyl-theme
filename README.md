@@ -12,7 +12,7 @@ Dibuat buat **alfa-marketdua-officialss.alfamarket2.my.id** — bebas dipakai ul
 | 🏝 Dynamic Island | Pil melayang ala iPhone: jam live WIB (`Asia/Jakarta`) + cuaca real-time (Open-Meteo, koordinat Bekasi Selatan). Bisa digeser kanan-kiri (posisi keingat), usap ke atas buat sembunyi, usap dari tepi atas / tap handle buat manggil |
 | 🖥 Dashboard | Daftar server jadi glass card, avatar icon gradient ungu, server ON glow hijau napas + bar status pulse, di HP tampil detail IP, CPU%, RAM, Disk per server |
 | 📊 Console | Kotak stats (Address/Uptime/CPU/Memory/Disk/Network) jadi glowing glass + **bar progress live** warna ijo→kuning→merah + grafik blok ikut ngaca |
-| 🧩 Widget Dashboard | 4 kartu glass di atas daftar server: **🌐 Status Jaringan** (total/online/offline + sparkline 60 menit), **🖥️ Server Saya** (status online + klik ke console, list bisa di-scroll), **📊 Kuota Resource** (RAM/disk terpakai; kalau limit 0 tampil badge "Unlimited" tanpa bar penuh), **🛰️ Node Health** (status Wings live + jumlah server). Plus **banner pengumuman/promo** yang bisa diatur dari `/admin` → Widget & Pengumuman, tampil di **dashboard dan semua halaman server** (console, files, dll), lengkap dengan **notifikasi browser** (user diminta izin; notif muncul sekali per pengumuman, klik notif fokus ke panel + sorot banner) |
+| 🧩 Widget Dashboard | 4 kartu glass di atas daftar server: **🌐 Status Jaringan** (total/online/offline + sparkline 60 menit), **🖥️ Server Saya** (status online + klik ke console, list bisa di-scroll), **📊 Kuota Resource** (RAM/disk terpakai; kalau limit 0 tampil badge "Unlimited" tanpa bar penuh), **👥 Traffic Pengunjung** (pengunjung online 5 menit terakhir, pengunjung hari ini, jumlah kunjungan, pengunjung 7 hari, sparkline 24 jam). Plus **banner pengumuman/promo** yang bisa diatur dari `/admin` → Widget & Pengumuman, tampil di **dashboard dan semua halaman server** (console, files, dll), lengkap dengan **notifikasi browser** (user diminta izin; notif muncul sekali per pengumuman, klik notif fokus ke panel + sorot banner) |
 | 🏆 Leaderboard | Ikon trophy di navbar dashboard → modal **Top 10/20 server** berdasarkan pemakaian **CPU / RAM / Disk** live. Global semua server panel, server offline disembunyikan, auto-refresh 10 detik. Data dikumpulkan background tiap menit lewat `leaderboard:collect` |
 | 🎧 Orb Menu | Satu orb melayang pojok kanan bawah (tap → mekar 4 bola): **💬 Chat Room**, **🛍️ Shop Bot** (`@Auto_Order_By_Alfa_bot`, ikon pakai foto profil bot), **✈️ Developer Telegram** (link + nama dev), **🎵 Musik**. Orb muncul di semua halaman panel **termasuk `/admin`**. Player musik: play/pause, stop, next/prev, bar progress bisa di-seek. **Playlist per akun** (bukan global): tiap akun cuma lihat lagu yang dia upload sendiri, tetap sinkron lintas device. Upload/hapus dari orb, file privat di `storage/app/music`, kuota 25 lagu / 300 MB per akun |
 | 💬 Chat Room | Chat global pake identitas akun. **Semua user login bisa kirim pesan** (maks 2000 karakter, rate limit 40/menit). Admin bisa hapus pesan & mute user (username + avatar + badge ADMIN). Polling 2.5 detik, emoji reaksi (6), **@mention** autocomplete, hapus pesan (diri/admin), **mute user** (10m/1j/24j, admin only), online count, anti-spam & rate-limit, XSS-safe. **Notifikasi browser** (tab background) + suara + badge unread. **Auto-prune: pesan >24 jam kehapus otomatis** (cron, bisa diatur `--hours=`). Butuh `chat-install.sh` (nyentuh app code + DB) |
@@ -108,7 +108,7 @@ sudo -u www-data php artisan view:clear
 | Halaman | Yang harus keliatan |
 |---|---|
 | `/auth/login` | Globe titik 3D + ripple pas disentuh |
-| Dashboard | 4 widget glass di atas daftar server (Status Jaringan, Server Saya, Kuota, Node Health) + daftar server glass |
+| Dashboard | 4 widget glass di atas daftar server (Status Jaringan, Server Saya, Kuota, Traffic Pengunjung) + daftar server glass |
 | Navbar dashboard | Ikon 🏆 leaderboard → Top 10/20 CPU/RAM/Disk live |
 | Halaman server | Bar progress warna-warni di stats |
 | Pojok kanan bawah | Orb menu (tap → Chat Room 💬 / Shop Bot 🛍️ / Telegram ✈️ / Musik 🎵) |
@@ -168,9 +168,9 @@ Pengumuman dashboard juga tetap disimpan di `storage/app/announcement.json`. Hap
 | Leaderboard 404 setelah upgrade panel | `sudo ./leaderboard-install.sh` lagi (route + cron ke-timpa upgrade) |
 | Widget dashboard ga muncul | `sudo ./widgets-install.sh` lagi habis upgrade panel, lalu hard refresh. Cek endpoint: `/widgets/data` harus balikin JSON |
 | Widget "Nunggu history collector" | Collector belum jalan 2x. Tunggu 1–2 menit atau tes `sudo -u www-data php artisan leaderboard:collect` |
-| Node Health Wings offline | Cek `https://<fqdn>:<port>/api/system` pakai token node; firewall/port Wings sering jadi penyebab |
+| Traffic pengunjung selalu 0 | Pastiin `CACHE_DRIVER=redis` dan Redis jalan. Cek `redis-cli ping`. Middleware `TrackVisitor` harus terdaftar di `app/Http/Kernel.php` (jalanin ulang `widgets-install.sh` kalau habis upgrade panel) |
 | Banner pengumuman ga muncul | Pastiin toggle **Tampilkan di dashboard** aktif dan tanggal berakhir belum lewat. Banner muncul di dashboard dan semua halaman server |
-| Banner ga muncul di halaman server | Hard refresh (asset `custom-widgets.js?v=5`). Kalau masih ga ada, cek console browser error + pastiin `/widgets/announcement` balikin JSON saat login |
+| Banner ga muncul di halaman server | Hard refresh (asset `custom-widgets.js?v=6`). Kalau masih ga ada, cek console browser error + pastiin `/widgets/announcement` balikin JSON saat login |
 | Prompt izin notifikasi ga muncul | Pastiin ada pengumuman aktif, buka dashboard, dan browser support Notification. Prompt cuma muncul sekali per sesi per pengumuman |
 | Notifikasi pengumuman ga masuk | Cek izin situs: ikon 🔒 / ⓘ di address bar → Notifikasi → **Izinkan**. Kalau pernah diblokir, harus diaktifin manual dari situ |
 | Notif cuma masuk pas panel kebuka | Itu batasan notifikasi lokal (service worker tanpa Web Push). Buat notif saat panel ditutup butuh VAPID + `minishlink/web-push` + tabel subscription |
@@ -200,6 +200,7 @@ leaderboard/   app/Http/Controllers/LeaderboardController.php -> endpoint top 10
                routes/leaderboard.php  -> routes/leaderboard.php (route /leaderboard/servers)
 widgets/       app/Http/Controllers/WidgetController.php -> endpoint /widgets/data + /widgets/announcement
                app/Http/Controllers/Admin/WidgetController.php -> simpan pengumuman dashboard
+               app/Http/Middleware/TrackVisitor.php -> hitung traffic pengunjung (Redis)
                resources/views/admin/widgets/index.blade.php -> form pengumuman di /admin
                routes/widgets.php      -> routes/widgets.php (route /widgets/data + /widgets/announcement)
 templates/     base-core.blade.php     -> resources/views/templates/base/core.blade.php
@@ -224,7 +225,16 @@ uninstall.sh          restore tema dari backup
 - Playlist musik sekarang **per akun dan disimpan di server** (`storage/app/music/playlist.json`). File lagu privat, hanya bisa di-stream lewat `/music/stream/{file}` setelah login dan hanya oleh pemiliknya (admin utama boleh moderasi). Kuota 25 lagu / 300 MB per akun.
 - File lagu lama dari versi publik otomatis dimigrasi ke storage privat dengan `owner_id: 0` (tersembunyi). Untuk mengklaim/menghapusnya, edit `playlist.json` atau jalankan `music-uninstall.sh --purge-files`.
 - Link Shop Bot ada di `assets/custom-orb.js` (`SHOP_URL`) dan ikonnya `assets/custom-shop-bot.jpg`. Ganti link/logo tinggal edit dua file itu.
-- Widget dashboard ambil data dari satu endpoint `/widgets/data` (cache global 60 detik). Status online ikut cache `leaderboard.json`; history sparkline di `storage/app/leaderboard-history.json` (60 titik terakhir, ditulis collector tiap menit). Pengumuman disimpan di `storage/app/announcement.json` dan diedit dari `/admin` → **Widget & Pengumuman**.
+- Widget dashboard ambil data dari satu endpoint `/widgets/data` (cache global 60 detik). Status online ikut cache `leaderboard.json`; history sparkline di `storage/app/leaderboard-history.json` (60 titik terakhir, ditulis collector tiap menit). Pengumuman disimpan di `storage/app/announcement.json` dan diedit dari `/admin` → **Widget & Pengumuman**. Traffic pengunjung dihitung middleware `TrackVisitor` dan disimpan di Redis.
+
+### Traffic pengunjung
+
+- Middleware `app/Http/Middleware/TrackVisitor.php` menghitung **pageview** tiap request halaman HTML (GET, status 200). Endpoint JSON (`/widgets/*`, `/api/*`) dan aset statis tidak ikut dihitung.
+- **Pengunjung online** = pengunjung unik yang aktif dalam **5 menit terakhir**. Heartbeat diambil dari polling `/widgets/data` (dashboard) dan `/widgets/announcement` (halaman server/lain) tiap 60 detik, jadi tab panel yang masih kebuka tetap kelihatan online walau cuma diem.
+- **Pengunjung unik** dihitung per akun (`u:<id>`) atau per sesi browser (`s:<hash>`), bukan per IP — aman buat panel di belakang NAT/proxy.
+- Data disimpan di Redis: `traffic:online` (sorted set), `traffic:views:d:*` / `traffic:uv:d:*` (harian, 40 hari), `traffic:views:w:*` / `traffic:uv:w:*` (mingguan, 15 hari), `traffic:views:h:*` (per jam, 3 hari buat sparkline 24 jam).
+- Butuh `CACHE_DRIVER=redis` (default panel Pterodactyl). Kalau Redis mati, widget traffic balikin 0 tanpa bikin panel error.
+- Uninstall widget juga mencabut middleware dari `Kernel.php`, tapi key `traffic:*` di Redis dibiarkan sampai expired otomatis.
 
 ### Notifikasi pengumuman
 

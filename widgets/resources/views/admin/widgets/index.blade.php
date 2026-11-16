@@ -231,10 +231,11 @@
                     <li>🌐 Status Jaringan</li>
                     <li>🖥️ Server Saya</li>
                     <li>📊 Kuota Resource</li>
-                    <li>🛰️ Node Health</li>
+                    <li>👥 Traffic Pengunjung</li>
                 </ul>
                 <p class="text-muted" style="margin-bottom:0;">
                     Data status diambil dari cache leaderboard (update tiap menit).
+                    Traffic pengunjung dihitung dari pageview panel (Redis), termasuk pengunjung online 5 menit terakhir.
                 </p>
             </div>
         </div>

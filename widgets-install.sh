@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 # ============================================================
 #  Widget installer — status jaringan, server saya, kuota,
-#  node health + banner pengumuman (pterodactyl-theme)
+#  traffic pengunjung + banner pengumuman (pterodactyl-theme)
 #
 #  Jalankan SETELAH ./install.sh :
 #     sudo ./widgets-install.sh
 #  Panel di folder lain:
 #     sudo PANEL_DIR=/var/www/panel ./widgets-install.sh
 #
-#  Butuh: controller + route + view admin + asset + cache leaderboard.
+#  Butuh: controller + route + view admin + asset + cache leaderboard
+#         + middleware TrackVisitor (traffic pengunjung, butuh Redis).
 #  Habis upgrade panel, jalankan ulang file ini.
 # ============================================================
 set -euo pipefail
@@ -32,6 +33,7 @@ id -u nginx >/dev/null 2>&1 && WEBUSER="nginx"
 
 # 1. copy backend + view + asset
 mkdir -p "$PANEL_DIR/app/Http/Controllers/Admin" \
+  "$PANEL_DIR/app/Http/Middleware" \
   "$PANEL_DIR/routes" \
   "$PANEL_DIR/resources/views/admin/widgets" \
   "$PANEL_DIR/public/assets" \
@@ -39,6 +41,7 @@ mkdir -p "$PANEL_DIR/app/Http/Controllers/Admin" \
 
 cp "$REPO_DIR/widgets/app/Http/Controllers/WidgetController.php" "$PANEL_DIR/app/Http/Controllers/"
 cp "$REPO_DIR/widgets/app/Http/Controllers/Admin/WidgetController.php" "$PANEL_DIR/app/Http/Controllers/Admin/"
+cp "$REPO_DIR/widgets/app/Http/Middleware/TrackVisitor.php" "$PANEL_DIR/app/Http/Middleware/"
 cp "$REPO_DIR/widgets/routes/widgets.php" "$PANEL_DIR/routes/"
 cp "$REPO_DIR/widgets/resources/views/admin/widgets/index.blade.php" "$PANEL_DIR/resources/views/admin/widgets/"
 cp "$REPO_DIR/assets/custom-widgets.css" "$REPO_DIR/assets/custom-widgets.js" "$PANEL_DIR/public/assets/"
@@ -46,7 +49,39 @@ cp "$REPO_DIR/assets/custom-widgets.css" "$REPO_DIR/assets/custom-widgets.js" "$
 if [ -f "$REPO_DIR/chat/sw-notify.js" ]; then
   cp "$REPO_DIR/chat/sw-notify.js" "$PANEL_DIR/public/sw-notify.js"
 fi
-echo "[1/6] Controller, route, view admin, asset + service worker dicopy"
+
+# 1b. daftarin TrackVisitor di middleware group "web"
+python3 - "$PANEL_DIR/app/Http/Kernel.php" <<'PYEOF'
+import re, sys
+p = sys.argv[1]
+src = open(p).read()
+if "TrackVisitor::class" in src:
+    print("[1b/6] TrackVisitor udah terdaftar di Kernel")
+else:
+    if "use Pterodactyl\\Http\\Middleware\\TrackVisitor;" not in src:
+        anchor = "use Pterodactyl\\Http\\Middleware\\TrimStrings;"
+        if anchor not in src:
+            sys.exit("[!] Ga nemu import TrimStrings di Kernel.php")
+        src = src.replace(anchor, anchor + "\nuse Pterodactyl\\Http\\Middleware\\TrackVisitor;", 1)
+
+    m = re.search(r"('web'\s*=>\s*\[)(.*?)(\n\s*\],)", src, re.S)
+    if not m:
+        sys.exit("[!] Ga nemu middleware group 'web' di Kernel.php")
+    body = m.group(2)
+    if "LanguageMiddleware::class," in body:
+        body = body.replace(
+            "LanguageMiddleware::class,",
+            "LanguageMiddleware::class,\n            TrackVisitor::class,",
+            1,
+        )
+    else:
+        body = body.rstrip() + "\n            TrackVisitor::class,"
+    src = src[:m.start(2)] + body + src[m.end(2):]
+    open(p, "w").write(src)
+    print("[1b/6] TrackVisitor didaftarin di middleware web")
+PYEOF
+
+echo "[1/6] Controller, route, view admin, middleware, asset + service worker dicopy"
 
 # 2. require widgets.php di base.php (sebelum catch-all SPA)
 python3 - "$BASE" <<'PYEOF'
@@ -131,7 +166,7 @@ if "custom-widgets.css" not in src:
                    '<link rel="stylesheet" href="/assets/custom-chat.css?v=3">',
                    '<link rel="stylesheet" href="/assets/custom-orb.css?v=8">'):
         if anchor in src:
-            src = src.replace(anchor, anchor + '\n    <link rel="stylesheet" href="/assets/custom-widgets.css?v=5">', 1)
+            src = src.replace(anchor, anchor + '\n    <link rel="stylesheet" href="/assets/custom-widgets.css?v=6">', 1)
             changed.append("CSS")
             break
 if "custom-widgets.js" not in src:
@@ -139,7 +174,7 @@ if "custom-widgets.js" not in src:
                    '<script src="/assets/custom-chat.js?v=7"></script>',
                    '<script src="/assets/custom-orb.js?v=15"></script>'):
         if anchor in src:
-            src = src.replace(anchor, anchor + '\n    <script src="/assets/custom-widgets.js?v=5"></script>', 1)
+            src = src.replace(anchor, anchor + '\n    <script src="/assets/custom-widgets.js?v=6"></script>', 1)
             changed.append("JS")
             break
 if changed:
@@ -157,6 +192,8 @@ sudo -u "$WEBUSER" php "$PANEL_DIR/artisan" view:clear 2>/dev/null || true
 chown -R "$WEBUSER:$WEBUSER" \
   "$PANEL_DIR/app/Http/Controllers/WidgetController.php" \
   "$PANEL_DIR/app/Http/Controllers/Admin/WidgetController.php" \
+  "$PANEL_DIR/app/Http/Middleware/TrackVisitor.php" \
+  "$PANEL_DIR/app/Http/Kernel.php" \
   "$PANEL_DIR/routes/widgets.php" "$PANEL_DIR/routes/base.php" "$PANEL_DIR/routes/admin.php" \
   "$PANEL_DIR/resources/views/admin/widgets" "$PANEL_DIR/resources/views/layouts/admin.blade.php" \
   "$PANEL_DIR/public/assets/custom-widgets.css" "$PANEL_DIR/public/assets/custom-widgets.js" \
@@ -166,7 +203,8 @@ echo "[6/6] Cache dibersihkan + permission"
 
 echo ""
 echo "[✓] Widget dashboard aktif!"
-echo "    4 widget: Status Jaringan, Server Saya, Kuota Resource, Node Health"
+echo "    4 widget: Status Jaringan, Server Saya, Kuota Resource, Traffic Pengunjung"
 echo "    Pengumuman: /admin -> Widget & Pengumuman"
 echo "    Status online ambil dari cache leaderboard:collect (tiap menit)"
+echo "    Traffic pengunjung disimpan di Redis (butuh CACHE_DRIVER=redis)"
 echo "    Uninstall: sudo ./widgets-uninstall.sh"

@@ -12,10 +12,26 @@ TPL="$PANEL_DIR/resources/views/templates/base/core.blade.php"
 # 1. hapus file backend + view + asset
 rm -f "$PANEL_DIR/app/Http/Controllers/WidgetController.php" \
       "$PANEL_DIR/app/Http/Controllers/Admin/WidgetController.php" \
+      "$PANEL_DIR/app/Http/Middleware/TrackVisitor.php" \
       "$PANEL_DIR/routes/widgets.php" \
       "$PANEL_DIR/public/assets/custom-widgets.css" \
       "$PANEL_DIR/public/assets/custom-widgets.js"
 rm -rf "$PANEL_DIR/resources/views/admin/widgets"
+
+# 1b. cabut TrackVisitor dari Kernel
+python3 - "$PANEL_DIR/app/Http/Kernel.php" <<'PYEOF'
+import sys
+p = sys.argv[1]
+try:
+    src = open(p).read()
+except OSError:
+    sys.exit(0)
+new = src.replace("\nuse Pterodactyl\\Http\\Middleware\\TrackVisitor;", "")
+new = new.replace("\n            TrackVisitor::class,", "")
+if new != src:
+    open(p, "w").write(new)
+    print("[1b] TrackVisitor dicabut dari Kernel")
+PYEOF
 
 # 2. cabut require + route admin + menu sidebar + tag asset
 python3 - "$BASE" "$ADMIN_ROUTES" "$ADMIN_LAYOUT" "$TPL" <<'PYEOF'
