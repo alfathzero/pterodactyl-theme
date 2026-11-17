@@ -18,7 +18,7 @@ AUTH="$PANEL_DIR/resources/views/templates/auth/core.blade.php"
 [ -f "$BASE.bak-theme" ] && cp "$BASE.bak-theme" "$BASE" && echo "[*] base restored"
 [ -f "$AUTH.bak-theme" ] && cp "$AUTH.bak-theme" "$AUTH" && echo "[*] auth restored"
 
-for f in custom-auth-3d.css custom-auth-3d.js custom-stats.js custom-anim.css custom-orb.css custom-orb.js custom-shop-bot.jpg custom-chat.css custom-chat.js custom-leaderboard.css custom-leaderboard.js custom-widgets.css custom-widgets.js; do
+for f in custom-auth-3d.css custom-auth-3d.js custom-stats.js custom-anim.css custom-orb.css custom-orb.js custom-shop-bot.jpg custom-chat.css custom-chat.js custom-leaderboard.css custom-leaderboard.js custom-widgets.css custom-widgets.js custom-profile.css custom-profile.js; do
   rm -f "$PANEL_DIR/public/assets/$f"
 done
 rm -f "$PANEL_DIR/public/sw-notify.js"

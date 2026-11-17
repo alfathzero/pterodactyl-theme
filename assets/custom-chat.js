@@ -230,7 +230,7 @@
       if (m.can_delete) acts += '<button class="cm-act danger dbtn" title="Hapus">✕</button>';
     }
     row.innerHTML =
-      '<div class="cm-ava" style="' + avaStyle(m.user.username) + '">' + esc(initials(m.user.username)) + '</div>' +
+      '<div class="cm-ava" style="' + avaStyle(m.user.username) + '">' + (m.user.avatar ? '' : esc(initials(m.user.username))) + '</div>' +
       '<div class="cm-msg">' +
       '<div class="cm-meta"><span class="cm-name">' + esc(m.user.username) + '</span>' +
       (m.user.admin ? '<span class="cm-admin">ADMIN</span>' : '') +
@@ -243,6 +243,21 @@
       (m.can_mute && !m.deleted ? '<div class="cm-mute-pop"><button data-m="10">10m</button><button data-m="60">1j</button><button data-m="1440">24j</button>' + (m.user.muted ? '<button class="un" data-m="0">unmute</button>' : '') + '</div>' : '') +
       '</div>';
     renderReacts(row, m.reactions || {});
+    if (m.user && m.user.avatar) {
+      var ava = row.querySelector('.cm-ava');
+      if (ava) {
+        var aimg = document.createElement('img');
+        aimg.className = 'cm-ava-img';
+        aimg.alt = m.user.username || '';
+        aimg.src = m.user.avatar + (m.user.avatar.indexOf('?') >= 0 ? '&' : '?') + 't=' + (m.id || 0);
+        aimg.onerror = function () {
+          if (aimg.parentNode) aimg.remove();
+          if (ava) ava.textContent = initials(m.user.username);
+        };
+        ava.textContent = '';
+        ava.appendChild(aimg);
+      }
+    }
     if (prepend) els.list.insertBefore(row, els.list.firstChild);
     else els.list.appendChild(row);
     wireRow(row, m);

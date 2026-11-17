@@ -57,6 +57,7 @@ class ChatController extends Controller
                 'username' => $user->username,
                 'admin' => (bool) $user->root_admin,
                 'muted_until' => $this->mutedUntil($user->id),
+                'avatar' => $user->avatar_url,
             ],
         ]);
     }
@@ -163,7 +164,10 @@ class ChatController extends Controller
             ->limit(8)
             ->get(['id', 'username']);
 
-        return new JsonResponse(['users' => $users]);
+        $list = $users->map(function ($u) {
+            return ['id' => $u->id, 'username' => $u->username, 'avatar' => $u->avatar_url];
+        });
+        return new JsonResponse(['users' => $list]);
     }
 
     /** POST /chat/mute/{userId} {minutes} — admin only. */
@@ -251,7 +255,8 @@ class ChatController extends Controller
                     'username' => $msg->user->username,
                     'admin' => (bool) $msg->user->root_admin,
                     'muted' => $mutes->has($msg->user->id),
-                ] : ['id' => 0, 'username' => 'user-terhapus', 'admin' => false, 'muted' => false],
+                    'avatar' => $msg->user->avatar_url,
+                ] : ['id' => 0, 'username' => 'user-terhapus', 'admin' => false, 'muted' => false, 'avatar' => null],
                 'body' => $msg->trashed() ? null : $msg->body,
                 'created_at' => optional($msg->created_at)->toIso8601String(),
                 'deleted' => (bool) $msg->deleted_at,
