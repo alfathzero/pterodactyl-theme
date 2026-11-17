@@ -40,11 +40,16 @@
   transition: transform 0.18s ease, box-shadow 0.25s ease;
 }
 
-/* server card: match panel dark navy theme */
-#app a[href^="/server/"] > div {
+/* server card: navy di <a> utuh, anak transparan -> nggak ada band abu di gap */
+#app a[href^="/server/"] {
   position: relative;
   background: linear-gradient(160deg, rgba(15, 23, 42, 0.95) 0%, rgba(10, 15, 29, 0.97) 100%) !important;
   border-color: rgba(148, 163, 184, 0.12) !important;
+}
+#app a[href^="/server/"] > div {
+  position: relative;
+  background: transparent !important;
+  border-color: rgba(148, 163, 184, 0.10) !important;
 }
 /* server card children: static (no per-child animation = no GPU artifact) */
 #app a[href^="/server/"] > div,
