@@ -7,7 +7,8 @@
     root: null,
     user: null,
     busy: false,
-    navObserver: null,
+    navEl: null,
+    navBtn: null,
   };
 
   function el(tag, cls, text) {
@@ -31,13 +32,10 @@
   /* ---------------- fetch current user + avatar ---------------- */
 
   function fetchMe() {
-    // read data-user-id from #app div (set by template)
     var appDiv = document.getElementById('app');
     if (appDiv) {
       var uid = parseInt(appDiv.getAttribute('data-user-id') || '0', 10);
-      if (uid > 0) {
-        state.user = { id: uid, username: '' };
-      }
+      if (uid > 0) state.user = { id: uid, username: '' };
     }
     return fetch('/profile/me', {
       headers: { Accept: 'application/json' },
@@ -62,24 +60,33 @@
     return AVATAR_URL + '/' + id + '?v=' + (t || Date.now());
   }
 
-  /* ---------------- account page card ---------------- */
+  /* ---------------- fast account container lookup ---------------- */
 
+  // Walk up from the password input instead of scanning all divs
   function findAccountContainer() {
-    var app = document.getElementById('app');
-    if (!app) return null;
-    var divs = app.querySelectorAll('div');
-    for (var i = 0; i < divs.length; i++) {
-      var div = divs[i];
-      if (div.id === 'pf-card') continue;
-      var style = window.getComputedStyle(div);
-      if (style.maxWidth !== '1200px') continue;
-      var parent = div.parentElement || div.parentNode;
-      if (parent) {
-        var ps = window.getComputedStyle(parent);
-        if (ps.overflowX === 'auto' || ps.overflowX === 'scroll') continue;
+    var input = document.querySelector('#app input[type="password"]');
+    if (!input) return null;
+    var cur = input;
+    for (var d = 0; d < 8; d++) {
+      cur = cur.parentElement;
+      if (!cur) break;
+      var ms = cur.style.maxWidth || cur.style.max_width;
+      if (ms === '1200px') return cur;
+      var id = cur.id;
+      if (id && id !== 'pf-card' && cur.className && /max-w-/.test(cur.className)) {
+        // check computed as fallback
+        if (window.getComputedStyle(cur).maxWidth === '1200px') return cur;
       }
-      if (div.querySelector && div.querySelector('input[type="password"]')) {
-        return div;
+    }
+    // fallback: parent that contains password input and has reasonable width
+    cur = input;
+    for (var d2 = 0; d2 < 8; d2++) {
+      cur = cur.parentElement;
+      if (!cur) break;
+      if (cur.querySelector('input[type="password"]') &&
+          (cur.style.maxWidth === '1200px' ||
+           window.getComputedStyle(cur).maxWidth === '1200px')) {
+        return cur;
       }
     }
     return null;
@@ -89,17 +96,10 @@
     return String(name || '?').replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || '??';
   }
 
-  function hue(name) {
-    var h = 0;
-    for (var i = 0; i < (name || '').length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
-    return h;
-  }
-
   function renderCard() {
     if (!isAccount()) return;
     var container = findAccountContainer();
     if (!container) return;
-
     if (state.root && container.contains(state.root)) return;
     removeCard();
 
@@ -113,7 +113,6 @@
     card.appendChild(head);
 
     var row = el('div', 'pf-row');
-
     var preview = el('div', 'pf-preview');
     preview.textContent = initials(user.username);
     var avaUrl = user.id ? avatarUrlFor(user.id) : null;
@@ -221,14 +220,13 @@
               img.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
               img.style.display = 'block';
               var preview = card.querySelector('.pf-preview');
-              if (preview && state.user) preview.textContent = '';
-              preview.appendChild(img);
+              if (preview) preview.textContent = '';
+              if (img.parentNode !== preview) preview.appendChild(img);
             }
             var del = card.querySelector('.pf-btn.danger');
             if (del) del.style.display = '';
           }
           toast(card, '✓ Foto profil diperbarui', true);
-          // re-render navbar avatar with fresh cache-bust
           refreshNavbar();
         } else {
           toast(card, '⚠️ ' + ((r.data && r.data.error) || 'Gagal upload'), false);
@@ -271,83 +269,84 @@
       });
   }
 
-  /* ---------------- navbar avatar swap ---------------- */
-
-  function refreshNavbar() {
-    if (!state.user) return;
-    var nav = findNavbar();
-    if (!nav) return;
-    var accountBtn = findAccountBtn(nav);
-    if (!accountBtn) return;
-
-    // Cek apakah user punya avatar dengan fetch HEAD
-    var url = avatarUrlFor(state.user.id);
-    var old = accountBtn.querySelector('img.nav-avatar');
-    if (old) old.remove();
-
-    // Sembunyikan ikon default (span/svg di dalam tombol) hanya kalau avatar berhasil load
-    var iconNodes = accountBtn.querySelectorAll('span, svg');
-    var img = el('img', 'nav-avatar');
-    img.alt = 'Avatar';
-    img.style.display = 'none';
-    img.onload = function () {
-      img.style.display = '';
-      for (var i = 0; i < iconNodes.length; i++) {
-        iconNodes[i].style.display = 'none';
-      }
-    };
-    img.onerror = function () {
-      if (img.parentNode) img.remove();
-      for (var i = 0; i < iconNodes.length; i++) {
-        iconNodes[i].style.display = '';
-      }
-    };
-    img.src = url;
-    accountBtn.appendChild(img);
-  }
+  /* ---------------- navbar avatar (lightweight) ---------------- */
 
   function findNavbar() {
     var logo = document.getElementById('logo');
-    if (!logo) return null;
-    var nav = logo.nextElementSibling;
-    if (nav && nav.querySelector) return nav;
-    // fallback: cari container yang punya link ke /account
-    var app = document.getElementById('app');
-    if (!app) return null;
-    var links = app.querySelectorAll('a[href="/account"]');
-    for (var i = 0; i < links.length; i++) {
-      var p = links[i].parentElement;
-      if (p && p.querySelector && p.querySelectorAll('a, button').length > 2) return p;
+    if (logo && logo.nextElementSibling && logo.nextElementSibling.querySelector) {
+      return logo.nextElementSibling;
     }
     return null;
   }
 
   function findAccountBtn(nav) {
-    // tombol akun biasanya link ke /account
+    if (!nav) return null;
     var links = nav.querySelectorAll('a[href="/account"]');
-    if (links.length) return links[links.length - 1];
-    // fallback: cari elemen dengan aria-label user/account
-    var cands = nav.querySelectorAll('[aria-label]');
-    for (var i = 0; i < cands.length; i++) {
-      var al = (cands[i].getAttribute('aria-label') || '').toLowerCase();
-      if (al.indexOf('account') >= 0 || al.indexOf('user') >= 0 || al.indexOf('profil') >= 0) return cands[i];
-    }
-    return null;
+    return links.length ? links[links.length - 1] : null;
   }
 
+  function refreshNavbar() {
+    if (!state.user || !state.user.id) return;
+    var nav = state.navEl || findNavbar();
+    if (!nav) return;
+    var btn = state.navBtn || findAccountBtn(nav);
+    if (!btn) return;
+
+    // remove old injected avatar
+    var old = btn.querySelector('img.nav-avatar');
+    if (old) old.remove();
+
+    // hide default icon, show img on load
+    var iconNodes = btn.querySelectorAll('span, svg');
+    var img = el('img', 'nav-avatar');
+    img.alt = 'Avatar';
+    img.style.display = 'none';
+    img.onload = function () {
+      img.style.display = '';
+      for (var i = 0; i < iconNodes.length; i++) iconNodes[i].style.display = 'none';
+    };
+    img.onerror = function () {
+      if (img.parentNode) img.remove();
+      for (var i = 0; i < iconNodes.length; i++) iconNodes[i].style.display = '';
+    };
+    img.src = avatarUrlFor(state.user.id);
+    btn.appendChild(img);
+  }
+
+  // Debounced watch — only re-inject if nav was re-rendered by React
+  var navTimer = null;
   function watchNavbar() {
-    if (state.navObserver) return;
-    state.navObserver = new MutationObserver(function () {
-      if (!state.user) return;
-      var nav = findNavbar();
-      if (!nav) return;
-      var btn = findAccountBtn(nav);
-      if (!btn.querySelector('img.nav-avatar')) {
-        refreshNavbar();
+    var nav = findNavbar();
+    if (!nav) {
+      // nav not ready yet, retry once after 500ms
+      setTimeout(function () {
+        nav = findNavbar();
+        if (nav) watchNavbar();
+      }, 500);
+      return;
+    }
+    state.navEl = nav;
+    state.navBtn = findAccountBtn(nav);
+    var observer = new MutationObserver(function (mutations) {
+      // only react if the account button was removed (React re-render)
+      for (var i = 0; i < mutations.length; i++) {
+        var removed = mutations[i].removedNodes;
+        for (var j = 0; j < removed.length; j++) {
+          var n = removed[j];
+          if (n.nodeType === 1 && (n.querySelector && n.querySelector('a[href="/account"]') ||
+              n.tagName === 'A' && n.getAttribute('href') === '/account')) {
+            // account button was removed, debounce re-inject
+            if (navTimer) clearTimeout(navTimer);
+            navTimer = setTimeout(function () {
+              state.navBtn = findAccountBtn(state.navEl);
+              refreshNavbar();
+            }, 100);
+            return;
+          }
+        }
       }
     });
-    var app = document.getElementById('app');
-    if (app) state.navObserver.observe(app, { childList: true, subtree: true });
+    observer.observe(nav, { childList: true });
   }
 
   /* ---------------- lifecycle ---------------- */
@@ -355,13 +354,17 @@
   function start() {
     if (!document.getElementById('app')) return;
     fetchMe().then(function () {
-      if (isAccount()) {
-        renderCard();
-        new MutationObserver(function () { renderCard(); }).observe(document.body, { childList: true, subtree: true });
-        setInterval(function () { if (!state.root || !document.body.contains(state.root)) renderCard(); }, 1500);
-      }
       refreshNavbar();
       watchNavbar();
+      if (isAccount()) {
+        renderCard();
+        // watch only the container (not body) — cheap
+        var container = findAccountContainer();
+        if (container) {
+          var mo = new MutationObserver(function () { renderCard(); });
+          mo.observe(container, { childList: true });
+        }
+      }
     });
   }
 
