@@ -46,13 +46,45 @@
   background: linear-gradient(160deg, rgba(15, 23, 42, 0.95) 0%, rgba(10, 15, 29, 0.97) 100%) !important;
   border-color: rgba(148, 163, 184, 0.12) !important;
 }
-/* server list rows (dashboard) — NO animasi, NO transition, isolate GPU */
-#app a[href^="/server/"],
+/* server card children: static (no per-child animation = no GPU artifact) */
 #app a[href^="/server/"] > div,
 #app a[href^="/server/"] > div * {
   animation: none !important;
   transition: none !important;
   will-change: auto !important;
+}
+
+/* entrance animation: hanya 12 card pertama (yg keliatan) biar ringan */
+@keyframes srvIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+#app a[href^="/server/"]:nth-child(-n+12) {
+  animation: srvIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+#app a[href^="/server/"]:nth-child(1)  { animation-delay: 0.02s; }
+#app a[href^="/server/"]:nth-child(2)  { animation-delay: 0.05s; }
+#app a[href^="/server/"]:nth-child(3)  { animation-delay: 0.08s; }
+#app a[href^="/server/"]:nth-child(4)  { animation-delay: 0.11s; }
+#app a[href^="/server/"]:nth-child(5)  { animation-delay: 0.14s; }
+#app a[href^="/server/"]:nth-child(6)  { animation-delay: 0.17s; }
+#app a[href^="/server/"]:nth-child(7)  { animation-delay: 0.20s; }
+#app a[href^="/server/"]:nth-child(8)  { animation-delay: 0.23s; }
+#app a[href^="/server/"]:nth-child(9)  { animation-delay: 0.26s; }
+#app a[href^="/server/"]:nth-child(10) { animation-delay: 0.29s; }
+#app a[href^="/server/"]:nth-child(11) { animation-delay: 0.32s; }
+#app a[href^="/server/"]:nth-child(12) { animation-delay: 0.35s; }
+
+/* hover: naik halus + glow */
+#app a[href^="/server/"] {
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+#app a[href^="/server/"]:hover {
+  transform: translateY(-3px);
+}
+#app a[href^="/server/"]:hover > div {
+  border-color: rgba(129, 140, 248, 0.45) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45), 0 0 20px rgba(99, 102, 241, 0.18) !important;
 }
 /* fix white line at bottom: cover strip */
 #app a[href^="/server/"] > div {
