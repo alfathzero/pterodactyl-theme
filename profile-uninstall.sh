@@ -67,6 +67,8 @@ except OSError:
     sys.exit(0)
 src = re.sub(r'\n    <link rel="stylesheet" href="/assets/custom-profile\.css\?v=\d+">', "", src)
 src = re.sub(r'\n    <script src="/assets/custom-profile\.js\?v=\d+"></script>', "", src)
+# remove data-user-id from app div
+src = src.replace('<div id="app" data-user-id="{{ auth()->user()->id ?? 0 }}"></div>', '<div id="app"></div>')
 src = src.replace("custom-chat.css?v=4", "custom-chat.css?v=3")
 src = src.replace("custom-chat.js?v=8", "custom-chat.js?v=7")
 open(p, "w").write(src)

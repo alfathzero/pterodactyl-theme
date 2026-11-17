@@ -13,7 +13,7 @@
 
 @section('container')
     <div id="modal-portal"></div>
-    <div id="app"></div>
+    <div id="app" data-user-id="{{ auth()->user()->id ?? 0 }}"></div>
 {{-- START: SANO NEON --}}
     <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -145,8 +145,8 @@
     @parent
     <script src="/assets/custom-stats.js?v=2"></script>
     <script src="/assets/custom-orb.js?v=15"></script>
-    <script src="/assets/custom-chat.js?v=8"></script>
+    <script src="/assets/custom-chat.js?v=9"></script>
     <script src="/assets/custom-leaderboard.js?v=3"></script>
     <script src="/assets/custom-widgets.js?v=7"></script>
-    <script src="/assets/custom-profile.js?v=2"></script>
+    <script src="/assets/custom-profile.js?v=3"></script>
 @endsection

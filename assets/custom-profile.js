@@ -31,21 +31,30 @@
   /* ---------------- fetch current user + avatar ---------------- */
 
   function fetchMe() {
-    return fetch('/api/client/account', {
+    // read data-user-id from #app div (set by template)
+    var appDiv = document.getElementById('app');
+    if (appDiv) {
+      var uid = parseInt(appDiv.getAttribute('data-user-id') || '0', 10);
+      if (uid > 0) {
+        state.user = { id: uid, username: '' };
+      }
+    }
+    return fetch('/profile/me', {
       headers: { Accept: 'application/json' },
       credentials: 'same-origin',
     })
       .then(function (res) { return res.ok ? res.json() : null; })
       .then(function (data) {
-        if (data && data.attributes) {
+        if (data && data.id) {
           state.user = {
-            id: data.attributes.id,
-            username: data.attributes.username,
+            id: data.id,
+            username: data.username || (state.user ? state.user.username : 'User'),
+            avatar: data.avatar || null,
           };
         }
         return state.user;
       })
-      .catch(function () { return null; });
+      .catch(function () { return state.user; });
   }
 
   function avatarUrlFor(id, t) {

@@ -66,7 +66,7 @@ class ProfileAvatarController extends Controller
 
         return new Response($disk->get($path), 200, [
             'Content-Type' => $mime,
-            'Cache-Control' => 'private, max-age=3600, immutable',
+            'Cache-Control' => 'private, max-age=3600',
             'ETag' => $etag,
             'Content-Length' => $disk->size($path),
         ]);
@@ -137,6 +137,19 @@ class ProfileAvatarController extends Controller
         return new JsonResponse([
             'ok' => true,
             'avatar_url' => $this->avatarUrl($user),
+        ]);
+    }
+
+    public function me(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Unauthenticated'], 401);
+        }
+        return new JsonResponse([
+            'id' => $user->id,
+            'username' => $user->username,
+            'avatar' => $user->avatar_url,
         ]);
     }
 

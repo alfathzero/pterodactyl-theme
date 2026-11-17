@@ -40,7 +40,7 @@ class ChatController extends Controller
         $after = (int) $request->query('after', 0);
         $before = (int) $request->query('before', 0);
 
-        $query = ChatMessage::query()->with('user:id,username,name_first,root_admin');
+        $query = ChatMessage::query()->with('user:id,username,name_first,root_admin,avatar_path,updated_at');
         if ($after > 0) {
             $messages = $query->where('id', '>', $after)->orderBy('id')->limit(50)->get();
         } elseif ($before > 0) {

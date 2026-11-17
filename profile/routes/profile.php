@@ -15,6 +15,8 @@ Route::prefix('profile')->middleware('auth')->group(function () {
     Route::delete('/avatar', [ProfileAvatarController::class, 'destroy'])
         ->middleware('throttle:10,1')
         ->name('profile.avatar.destroy');
+    Route::get('/me', [ProfileAvatarController::class, 'me'])
+        ->name('profile.me');
 });
 
 /* PROFILE-PHOTO END */

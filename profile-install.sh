@@ -129,11 +129,17 @@ if "custom-profile.css" not in src:
 if "custom-profile.js" not in src:
     anchor = '<script src="/assets/custom-widgets.js?v=7"></script>'
     if anchor in src:
-        src = src.replace(anchor, anchor + '\n    <script src="/assets/custom-profile.js?v=2"></script>', 1)
+        src = src.replace(anchor, anchor + '\n    <script src="/assets/custom-profile.js?v=3"></script>', 1)
         changed = True
 # bump chat css/js version
 src = src.replace("custom-chat.css?v=3", "custom-chat.css?v=4")
-src = src.replace("custom-chat.js?v=7", "custom-chat.js?v=8")
+src = src.replace("custom-chat.js?v=7", "custom-chat.js?v=9")
+# add data-user-id to app div
+if 'data-user-id' not in src:
+    anchor = '<div id="app"></div>'
+    if anchor in src:
+        src = src.replace(anchor, '<div id="app" data-user-id="{{ auth()->user()->id ?? 0 }}"></div>', 1)
+        changed = True
 if changed or "custom-chat.css?v=4" in src:
     open(p, "w").write(src)
     print("[5/5] Template di-inject (CSS + JS + chat version bump)")
