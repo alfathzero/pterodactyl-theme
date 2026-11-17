@@ -40,24 +40,11 @@
   transition: transform 0.18s ease, box-shadow 0.25s ease;
 }
 
-/* fix: bunuh garis diagonal loading di kartu server */
-#app a[href^="/server/"] {
-  background-color: hsl(209, 18%, 30%) !important;
-  background-image: none !important;
-}
-#app a[href^="/server/"]::before,
-#app a[href^="/server/"]::after {
-  display: none !important;
-  content: none !important;
-}
-/* juga target inner div (GreyRowBox = styled div) */
+/* server card: match panel dark navy theme */
 #app a[href^="/server/"] > div {
-  background-image: none !important;
-}
-#app a[href^="/server/"] > div::before,
-#app a[href^="/server/"] > div::after {
-  display: none !important;
-  content: none !important;
+  position: relative;
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.95) 0%, rgba(10, 15, 29, 0.97) 100%) !important;
+  border-color: rgba(148, 163, 184, 0.12) !important;
 }
 /* server list rows (dashboard) — NO animasi, NO transition, isolate GPU */
 #app a[href^="/server/"],
@@ -67,9 +54,18 @@
   transition: none !important;
   will-change: auto !important;
 }
-/* fix white line: force proper compositing layer (keeps rounded corners intact) */
+/* fix white line at bottom: cover strip */
 #app a[href^="/server/"] > div {
   transform: translateZ(0);
+}
+#app a[href^="/server/"] > div::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: rgba(10, 15, 29, 1);
+  border-radius: 0 0 0.25rem 0.25rem;
+  pointer-events: none;
 }
 /* loading indicator: small pulsing dot di bawah card yg masih loading */
 #app a[href^="/server/"].srv-loading > div::after {
