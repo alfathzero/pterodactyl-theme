@@ -48,9 +48,9 @@
       .catch(function () { return null; });
   }
 
-  function avatarUrlFor(id) {
+  function avatarUrlFor(id, t) {
     if (!id) return null;
-    return AVATAR_URL + '/' + id + '?v=' + Date.now();
+    return AVATAR_URL + '/' + id + '?v=' + (t || Date.now());
   }
 
   /* ---------------- account page card ---------------- */
@@ -210,11 +210,16 @@
             var img = card.querySelector('.pf-preview img');
             if (img) {
               img.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
+              img.style.display = 'block';
+              var preview = card.querySelector('.pf-preview');
+              if (preview && state.user) preview.textContent = '';
+              preview.appendChild(img);
             }
             var del = card.querySelector('.pf-btn.danger');
             if (del) del.style.display = '';
           }
           toast(card, '✓ Foto profil diperbarui', true);
+          // re-render navbar avatar with fresh cache-bust
           refreshNavbar();
         } else {
           toast(card, '⚠️ ' + ((r.data && r.data.error) || 'Gagal upload'), false);
@@ -266,14 +271,29 @@
     var accountBtn = findAccountBtn(nav);
     if (!accountBtn) return;
 
-    // remove old injected avatar
+    // Cek apakah user punya avatar dengan fetch HEAD
+    var url = avatarUrlFor(state.user.id);
     var old = accountBtn.querySelector('img.nav-avatar');
     if (old) old.remove();
 
+    // Sembunyikan ikon default (span/svg di dalam tombol) hanya kalau avatar berhasil load
+    var iconNodes = accountBtn.querySelectorAll('span, svg');
     var img = el('img', 'nav-avatar');
     img.alt = 'Avatar';
-    img.src = avatarUrlFor(state.user.id);
-    img.onerror = function () { if (img.parentNode) img.remove(); };
+    img.style.display = 'none';
+    img.onload = function () {
+      img.style.display = '';
+      for (var i = 0; i < iconNodes.length; i++) {
+        iconNodes[i].style.display = 'none';
+      }
+    };
+    img.onerror = function () {
+      if (img.parentNode) img.remove();
+      for (var i = 0; i < iconNodes.length; i++) {
+        iconNodes[i].style.display = '';
+      }
+    };
+    img.src = url;
     accountBtn.appendChild(img);
   }
 
@@ -313,7 +333,7 @@
       var nav = findNavbar();
       if (!nav) return;
       var btn = findAccountBtn(nav);
-      if (btn && !btn.querySelector('img.nav-avatar')) {
+      if (!btn.querySelector('img.nav-avatar')) {
         refreshNavbar();
       }
     });

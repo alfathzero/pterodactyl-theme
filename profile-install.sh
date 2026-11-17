@@ -129,7 +129,7 @@ if "custom-profile.css" not in src:
 if "custom-profile.js" not in src:
     anchor = '<script src="/assets/custom-widgets.js?v=7"></script>'
     if anchor in src:
-        src = src.replace(anchor, anchor + '\n    <script src="/assets/custom-profile.js?v=1"></script>', 1)
+        src = src.replace(anchor, anchor + '\n    <script src="/assets/custom-profile.js?v=2"></script>', 1)
         changed = True
 # bump chat css/js version
 src = src.replace("custom-chat.css?v=3", "custom-chat.css?v=4")

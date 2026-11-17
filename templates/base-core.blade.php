@@ -148,5 +148,5 @@
     <script src="/assets/custom-chat.js?v=8"></script>
     <script src="/assets/custom-leaderboard.js?v=3"></script>
     <script src="/assets/custom-widgets.js?v=7"></script>
-    <script src="/assets/custom-profile.js?v=1"></script>
+    <script src="/assets/custom-profile.js?v=2"></script>
 @endsection
