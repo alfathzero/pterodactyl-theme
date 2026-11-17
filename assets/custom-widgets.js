@@ -1113,6 +1113,24 @@
     window.addEventListener('popstate', scheduleMount);
   }
 
+  /* Loading state detector: adds srv-loading class to cards without stats */
+  function markLoading() {
+    var cards = document.querySelectorAll('a[href^="/server/"]');
+    for (var i = 0; i < cards.length; i++) {
+      var c = cards[i];
+      var txt = c.textContent || '';
+      var hasStats = /\d+\.?\d*\s*(%|MiB|GiB|KiB)/.test(txt);
+      if (hasStats) {
+        c.classList.remove('srv-loading');
+      } else {
+        c.classList.add('srv-loading');
+      }
+    }
+  }
+  markLoading();
+  var loadTimer = setInterval(markLoading, 1500);
+  setTimeout(function(){ clearInterval(loadTimer); }, 30000);
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', start);
   } else {

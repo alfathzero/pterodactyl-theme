@@ -18,18 +18,19 @@
 }
 
 /* kotak2 grid (Address/Uptime/CPU/Memory/Disk/Net + power buttons) */
-#app [class*="grid-cols"] > div,
-#app [class*="grid-cols"] > button {
+/* EXCLUDE server rows — grid-cols-12 di server card bikin 2000+ elemen anim = GPU artifact */
+#app [class*="grid-cols"]:not(a) > div,
+#app [class*="grid-cols"]:not(a) > button {
   animation: popIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
-#app [class*="grid-cols"] > :nth-child(1) { animation-delay: 0.04s; }
-#app [class*="grid-cols"] > :nth-child(2) { animation-delay: 0.1s; }
-#app [class*="grid-cols"] > :nth-child(3) { animation-delay: 0.16s; }
-#app [class*="grid-cols"] > :nth-child(4) { animation-delay: 0.22s; }
-#app [class*="grid-cols"] > :nth-child(5) { animation-delay: 0.28s; }
-#app [class*="grid-cols"] > :nth-child(6) { animation-delay: 0.34s; }
-#app [class*="grid-cols"] > :nth-child(7) { animation-delay: 0.4s; }
-#app [class*="grid-cols"] > :nth-child(n+8) { animation-delay: 0.46s; }
+#app [class*="grid-cols"]:not(a) > :nth-child(1) { animation-delay: 0.04s; }
+#app [class*="grid-cols"]:not(a) > :nth-child(2) { animation-delay: 0.1s; }
+#app [class*="grid-cols"]:not(a) > :nth-child(3) { animation-delay: 0.16s; }
+#app [class*="grid-cols"]:not(a) > :nth-child(4) { animation-delay: 0.22s; }
+#app [class*="grid-cols"]:not(a) > :nth-child(5) { animation-delay: 0.28s; }
+#app [class*="grid-cols"]:not(a) > :nth-child(6) { animation-delay: 0.34s; }
+#app [class*="grid-cols"]:not(a) > :nth-child(7) { animation-delay: 0.4s; }
+#app [class*="grid-cols"]:not(a) > :nth-child(n+8) { animation-delay: 0.46s; }
 
 /* hover naik + glow */
 #app [class*="grid-cols"] > div:hover,
@@ -40,27 +41,53 @@
 }
 
 /* fix: bunuh garis diagonal loading di kartu server */
-#app a[href^="/server/"]:has(.status-bar) {
+#app a[href^="/server/"] {
   background-color: hsl(209, 18%, 30%) !important;
   background-image: none !important;
 }
-#app a[href^="/server/"]:has(.status-bar)::before,
-#app a[href^="/server/"]:has(.status-bar)::after {
+#app a[href^="/server/"]::before,
+#app a[href^="/server/"]::after {
   display: none !important;
   content: none !important;
 }
-/* server list rows (dashboard) */
-#app a[href^="/server/"]:has(.status-bar) {
-  animation: slideRight 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
-  transition: transform 0.18s ease, box-shadow 0.25s ease;
+/* juga target inner div (GreyRowBox = styled div) */
+#app a[href^="/server/"] > div {
+  background-image: none !important;
 }
-#app a[href^="/server/"]:has(.status-bar):nth-child(1) { animation-delay: 0.05s; }
-#app a[href^="/server/"]:has(.status-bar):nth-child(2) { animation-delay: 0.11s; }
-#app a[href^="/server/"]:has(.status-bar):nth-child(3) { animation-delay: 0.17s; }
-#app a[href^="/server/"]:has(.status-bar):nth-child(4) { animation-delay: 0.23s; }
-#app a[href^="/server/"]:has(.status-bar):nth-child(5) { animation-delay: 0.29s; }
-#app a[href^="/server/"]:has(.status-bar):nth-child(6) { animation-delay: 0.35s; }
-#app a[href^="/server/"]:has(.status-bar):nth-child(n+7) { animation-delay: 0.4s; }
+#app a[href^="/server/"] > div::before,
+#app a[href^="/server/"] > div::after {
+  display: none !important;
+  content: none !important;
+}
+/* server list rows (dashboard) — NO animasi, NO transition, isolate GPU */
+#app a[href^="/server/"],
+#app a[href^="/server/"] > div,
+#app a[href^="/server/"] > div * {
+  animation: none !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+/* fix white line: force proper compositing layer (keeps rounded corners intact) */
+#app a[href^="/server/"] > div {
+  transform: translateZ(0);
+}
+/* loading indicator: small pulsing dot di bawah card yg masih loading */
+#app a[href^="/server/"].srv-loading > div::after {
+  content: '';
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(129, 140, 248, 0.6);
+  animation: srv-pulse 1.2s ease-in-out infinite;
+}
+@keyframes srv-pulse {
+  0%, 100% { opacity: 0.3; transform: translateX(-50%) scale(0.8); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.2); }
+}
 
 /* grey row boxes (Files/Users/Schedules dsb) */
 #app [class*="shadow"][class*="rounded"] {
