@@ -3,7 +3,7 @@
 ])
 
 @section('assets')
-    <link rel="stylesheet" href="/assets/custom-anim.css?v=12">
+    <link rel="stylesheet" href="/assets/custom-anim.css?v=13">
     <link rel="stylesheet" href="/assets/custom-orb.css?v=8">
     <link rel="stylesheet" href="/assets/custom-chat.css?v=4">
     <link rel="stylesheet" href="/assets/custom-leaderboard.css?v=3">

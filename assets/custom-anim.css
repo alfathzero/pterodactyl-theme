@@ -39,6 +39,16 @@
   transition: transform 0.18s ease, box-shadow 0.25s ease;
 }
 
+/* fix: bunuh garis diagonal loading di kartu server */
+#app a[href^="/server/"]:has(.status-bar) {
+  background-color: hsl(209, 18%, 30%) !important;
+  background-image: none !important;
+}
+#app a[href^="/server/"]:has(.status-bar)::before,
+#app a[href^="/server/"]:has(.status-bar)::after {
+  display: none !important;
+  content: none !important;
+}
 /* server list rows (dashboard) */
 #app a[href^="/server/"]:has(.status-bar) {
   animation: slideRight 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
