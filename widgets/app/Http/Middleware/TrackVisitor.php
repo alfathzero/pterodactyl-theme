@@ -37,9 +37,14 @@ class TrackVisitor
         $response = $next($request);
 
         try {
+            // Bot/monitoring (LiveStatus, curl, crawler, dsb) ga dihitung.
+            if ($this->isBot($request)) {
+                return $response;
+            }
+
             if ($this->isHeartbeat($request)) {
                 $this->markOnline($this->visitorKey($request), time());
-            } elseif ($this->shouldTrack($request, $response)) {
+            } elseif ($this->shouldTrack($request, $response) && !$this->overFloodLimit($request)) {
                 $this->track($request);
             }
         } catch (\Throwable $e) {
@@ -47,6 +52,54 @@ class TrackVisitor
         }
 
         return $response;
+    }
+
+    /**
+     * Deteksi bot / monitoring / tool non-manusia lewat User-Agent.
+     * LiveStatus/1.0 (uptime monitor) = penyebab utama pengunjung jadi ribuan.
+     */
+    private function isBot(Request $request): bool
+    {
+        $ua = strtolower(trim((string) $request->userAgent()));
+
+        // Nggak ada UA sama sekali -> hampir pasti tool.
+        if ($ua === '') {
+            return true;
+        }
+
+        $signatures = [
+            'livestatus', 'uptime', 'monitor', 'probe', 'health', 'pingdom',
+            'uptrends', 'seobility', 'ahrefs', 'semrush', 'majestic',
+            'bot', 'spider', 'crawler', 'crawl', 'scanner',
+            'curl', 'wget', 'python', 'go-http', 'gohttp', 'okhttp', 'libwww',
+            'headless', 'facebookexternalhit', 'twitterbot', 'telegrambot',
+            'slackbot', 'discordbot', 'linkedinbot', 'applebot',
+        ];
+
+        foreach ($signatures as $sig) {
+            if (str_contains($ua, $sig)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Anti-flood: satu IP+UA yang request halaman HTML > 60x / menit
+     * dianggap flood/bot, stop di-count. Manusia normal < 10 halaman/menit.
+     * Dipakai sebagai penahan tambahan kalau ada flood yang lolos UA check.
+     */
+    private function overFloodLimit(Request $request): bool
+    {
+        $key = 'traffic:flood:' . sha1($request->ip() . '|' . ($request->userAgent() ?? ''));
+        $redis = Redis::connection();
+        $n = (int) $redis->incr($key);
+        if ($n === 1) {
+            $redis->expire($key, 60);
+        }
+
+        return $n > 60;
     }
 
     private function isHeartbeat(Request $request): bool
