@@ -18,6 +18,8 @@ class ChatController extends Controller
     public const MAX_LEN = 2000;
     public const REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
     public const MUTE_MINUTES = [10, 60, 1440];
+    /** Kalau true, hanya root_admin yang bisa kirim pesan (room read-only untuk user biasa). */
+    public const ADMIN_ONLY_SEND = true;
     private const ONLINE_TTL = 45;
 
     /** User yang login (pengaman kalau middleware auth somehow kelewat). */
@@ -66,6 +68,10 @@ class ChatController extends Controller
     public function store(Request $request): JsonResponse
     {
         $user = $this->me($request);
+
+        if (self::ADMIN_ONLY_SEND && !$user->root_admin) {
+            return new JsonResponse(['error' => 'Hanya admin yang bisa kirim pesan di room ini'], 403);
+        }
 
         if ($until = $this->mutedUntil($user->id)) {
             return new JsonResponse(['error' => 'Kamu di-mute sampai ' . $until], 403);

@@ -145,7 +145,7 @@
     @parent
     <script src="/assets/custom-stats.js?v=2"></script>
     <script src="/assets/custom-orb.js?v=15"></script>
-    <script src="/assets/custom-chat.js?v=9"></script>
+    <script src="/assets/custom-chat.js?v=10"></script>
     <script src="/assets/custom-leaderboard.js?v=3"></script>
     <script src="/assets/custom-widgets.js?v=10"></script>
     <script src="/assets/custom-profile.js?v=4"></script>
