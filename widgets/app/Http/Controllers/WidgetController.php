@@ -29,6 +29,15 @@ class WidgetController extends Controller
             return $this->globalData();
         });
 
+        // Pengaman: kalau ada entry cache basi ber-TTL panjang (mis. ditulis
+        // panel/proses lain yang pakai Redis+prefix sama), JANGAN pernah serve
+        // data lebih tua dari ~90 detik. Recompute kalau basi.
+        $fetched = (int) ($global['fetched_at'] ?? 0);
+        if ($fetched === 0 || (time() - $fetched) > (int) (self::CACHE_TTL * 1.5)) {
+            $global = $this->globalData();
+            Cache::put('widgets:global', $global, self::CACHE_TTL);
+        }
+
         [$myServers, $quota, $myServersTotal] = $this->userData((int) $user->id);
 
         return new JsonResponse([
@@ -69,6 +78,7 @@ class WidgetController extends Controller
         $nodes = Node::query()->count();
 
         return [
+            'fetched_at' => time(),
             'network' => [
                 'total' => (int) $total,
                 'online' => $online,
