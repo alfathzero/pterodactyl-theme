@@ -807,6 +807,7 @@
     grid.appendChild(myServersCard(data.my_servers || [], Number(data.my_servers_total) || (data.my_servers || []).length));
     grid.appendChild(quotaCard(data.quota || {}));
     grid.appendChild(trafficCard(data.traffic || {}));
+    if (data.vps) grid.appendChild(vpsCard(data.vps));
     root.appendChild(grid);
   }
 
@@ -845,6 +846,40 @@
     node.appendChild(document.createTextNode(label + ' '));
     node.appendChild(el('b', null, String(value == null ? '-' : value)));
     return node;
+  }
+
+  /* ---------------- VPS real-time ---------------- */
+
+  function vpsCard(v) {
+    var hasCpu = v.cpu_pct !== null && v.cpu_pct !== undefined;
+    var cpu = hasCpu ? Number(v.cpu_pct) : 0;
+
+    var cardNode = card('🖥️', 'VPS Real-Time', hasCpu ? Math.round(cpu) + '%' : '…',
+      hasCpu && cpu >= 85 ? 'warn' : '');
+
+    var big = el('div', 'dw-big');
+    var num = el('span', 'dw-big-num', hasCpu ? String(Math.round(cpu)) : '—');
+    big.appendChild(num);
+    big.appendChild(el('span', 'dw-big-sub', v.cores ? '% CPU · ' + v.cores + ' core' : '% CPU (live)'));
+    cardNode.appendChild(big);
+
+    var meta = el('div', 'dw-meta');
+    meta.appendChild(chip('RAM',
+      (v.ram_used_gb != null && v.ram_total_gb != null) ? v.ram_used_gb + ' / ' + v.ram_total_gb + ' GB' : '-'));
+    meta.appendChild(chip('Disk',
+      (v.disk_used_gb != null && v.disk_total_gb != null) ? v.disk_used_gb + ' / ' + v.disk_total_gb + ' GB' : '-'));
+    meta.appendChild(chip('Load', v.load != null ? v.load : '-'));
+    if (v.uptime) meta.appendChild(chip('Uptime', v.uptime));
+    cardNode.appendChild(meta);
+
+    var l1 = el('div', 'dw-muted'); l1.textContent = 'CPU % (30 mnt)';
+    var l2 = el('div', 'dw-muted'); l2.textContent = 'RAM % (30 mnt)';
+    cardNode.appendChild(l1);
+    cardNode.appendChild(sparkline(v.history_cpu || [], 'Nunggu data VPS...'));
+    cardNode.appendChild(l2);
+    cardNode.appendChild(sparkline(v.history_ram || [], 'Nunggu data VPS...'));
+
+    return cardNode;
   }
 
   function sparkline(history, emptyText) {
