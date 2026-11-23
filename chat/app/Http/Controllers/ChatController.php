@@ -19,7 +19,7 @@ class ChatController extends Controller
     public const REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
     public const MUTE_MINUTES = [10, 60, 1440];
     /** Kalau true, hanya root_admin yang bisa kirim pesan (room read-only untuk user biasa). */
-    public const ADMIN_ONLY_SEND = true;
+    public const ADMIN_ONLY_SEND = false;
     private const ONLINE_TTL = 45;
 
     /** User yang login (pengaman kalau middleware auth somehow kelewat). */

@@ -380,13 +380,7 @@
 
   // ============ data ============
   function banner(my) {
-    if (!my.admin) {
-      st.readonly = true;
-      els.banner.textContent = '🔒 Room ini hanya untuk admin — lu bisa baca, tapi ga bisa kirim pesan.';
-      els.banner.classList.add('show');
-      els.input.disabled = true; els.send.disabled = true;
-      els.input.placeholder = 'Hanya admin yang bisa kirim';
-    } else if (my.muted_until && new Date(my.muted_until) > new Date()) {
+    if (my.muted_until && new Date(my.muted_until) > new Date()) {
       st.readonly = true;
       els.banner.textContent = '🔇 Kamu di-mute oleh admin sampai ' + wib(my.muted_until) + ' WIB';
       els.banner.classList.add('show');
@@ -484,7 +478,6 @@
     var body = els.input.value.trim();
     if (!body || st.sending) return;
     if (body.length > 2000) { toast('⚠️ Maksimal 2000 karakter (pesan lu ' + body.length + ')'); return; }
-    if (st.my && !st.my.admin) { toast('🔒 Hanya admin yang bisa kirim'); return; }
     if (st.my && st.my.muted_until && new Date(st.my.muted_until) > new Date()) { toast('🔇 Kamu lagi di-mute'); return; }
     st.sending = true;
     api(API + '/messages', 'POST', { body: body }).then(function (r) {
