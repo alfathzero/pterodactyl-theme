@@ -12,5 +12,5 @@
 
 @section('scripts')
     @parent
-    <script src="/assets/custom-auth-3d.js?v=4"></script>
+    <script src="/assets/custom-auth-3d.js?v=5"></script>
 @endsection

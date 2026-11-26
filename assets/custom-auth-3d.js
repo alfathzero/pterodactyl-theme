@@ -17,8 +17,11 @@
     function resize() {
       W = canvas.width = window.innerWidth;
       H = canvas.height = window.innerHeight;
-      CX = W * 0.5; CY = H * 0.52;
-      R = Math.min(W, H) * 0.34;
+      var portrait = H > W;
+      CX = W * 0.5;
+      // portrait (HP): globe lebih gede + agak ke bawah biar ga ketutup card
+      CY = H * (portrait ? 0.60 : 0.52);
+      R = Math.min(W, H) * (portrait ? 0.44 : 0.34);
     }
     resize();
     window.addEventListener('resize', resize);
