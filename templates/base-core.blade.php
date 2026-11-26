@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/assets/custom-leaderboard.css?v=3">
     <link rel="stylesheet" href="/assets/custom-widgets.css?v=7">
     <link rel="stylesheet" href="/assets/custom-profile.css?v=1">
-    <link rel="stylesheet" href="/assets/custom-brutal.css?v=1">
+    <link rel="stylesheet" href="/assets/custom-glass.css?v=2">
 @endsection
 
 @section('container')
@@ -145,7 +145,7 @@
 @section('scripts')
     @parent
     <script src="/assets/custom-stats.js?v=2"></script>
-    <script src="/assets/custom-brutal.js?v=1"></script>
+    <script src="/assets/custom-glass.js?v=1"></script>
     <script src="/assets/custom-orb.js?v=15"></script>
     <script src="/assets/custom-chat.js?v=11"></script>
     <script src="/assets/custom-leaderboard.js?v=3"></script>
