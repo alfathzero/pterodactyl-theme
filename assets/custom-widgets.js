@@ -802,6 +802,8 @@
   function render(root, data) {
     root.textContent = '';
 
+    if (data.user) root.appendChild(heroCard(data.user, data));
+
     var grid = el('div', 'dw-grid');
     grid.appendChild(networkCard(data.network || {}));
     grid.appendChild(myServersCard(data.my_servers || [], Number(data.my_servers_total) || (data.my_servers || []).length));
@@ -809,6 +811,98 @@
     grid.appendChild(trafficCard(data.traffic || {}));
     if (data.vps) grid.appendChild(vpsCard(data.vps));
     root.appendChild(grid);
+  }
+
+  /* ---------------- hero profil (glass) ---------------- */
+  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+  function joinedLabel(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return 'Gabung ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  function initEl(initials) {
+    return el('div', 'gl-avatar', initials);
+  }
+
+  function hstat(value, label) {
+    var node = el('div', 'gl-hstat');
+    node.appendChild(el('b', null, String(value)));
+    node.appendChild(el('span', null, label));
+    return node;
+  }
+
+  function heroCard(u, data) {
+    var net = data.network || {};
+    var hero = el('div', 'gl-hero');
+    hero.appendChild(el('div', 'gl-cover'));
+
+    var body = el('div', 'gl-hero-body');
+    var top = el('div', 'gl-hero-top');
+
+    var wrap = el('div', 'gl-avatar-wrap');
+    var initials = String(u.username || '?').slice(0, 2).toUpperCase();
+    if (u.avatar) {
+      var img = el('img', 'gl-avatar');
+      img.src = u.avatar;
+      img.alt = u.username || 'avatar';
+      img.addEventListener('error', function () {
+        if (img.parentNode) img.parentNode.replaceChild(initEl(initials), img);
+      });
+      wrap.appendChild(img);
+    } else {
+      wrap.appendChild(initEl(initials));
+    }
+    wrap.appendChild(el('span', 'gl-dot'));
+    top.appendChild(wrap);
+
+    var actions = el('div', 'gl-actions');
+    var acc = el('a', 'gl-btn', '⚙️ Akun');
+    acc.href = '/account';
+    var edit = el('a', 'gl-btn gl-btn-primary', '✏️ Edit Profil');
+    edit.href = '/account';
+    actions.appendChild(acc);
+    actions.appendChild(edit);
+    top.appendChild(actions);
+    body.appendChild(top);
+
+    var identity = el('div', 'gl-identity');
+    var left = el('div');
+
+    var name = el('h1', 'gl-name');
+    name.appendChild(document.createTextNode(u.username || 'User'));
+    if (u.root_admin) name.appendChild(el('span', 'gl-badge-admin', 'Root Admin'));
+    left.appendChild(name);
+
+    left.appendChild(el('div', 'gl-handle',
+      '@' + (u.username || 'user') + ' · ' + (u.root_admin ? 'Administrator' : 'Member')));
+    left.appendChild(el('p', 'gl-bio',
+      'Selamat datang di dashboard. Status server, kuota resource, dan aktivitas panel tampil real-time di sini.'));
+
+    var chips = el('div', 'gl-chips');
+    var live = el('span', 'gl-chip gl-chip-live');
+    live.appendChild(el('span', 'gl-pulse'));
+    live.appendChild(document.createTextNode('Online'));
+    chips.appendChild(live);
+    chips.appendChild(el('span', 'gl-chip', '🛰️ ' + (Number(net.nodes) || 0) + ' node'));
+    chips.appendChild(el('span', 'gl-chip', '🖥️ ' + (Number(net.online) || 0) + ' server online'));
+    var j = joinedLabel(u.joined);
+    if (j) chips.appendChild(el('span', 'gl-chip', '📅 ' + j));
+    left.appendChild(chips);
+    identity.appendChild(left);
+
+    var stats = el('div', 'gl-stats');
+    stats.appendChild(hstat(Number(data.my_servers_total) || 0, 'Server Saya'));
+    stats.appendChild(hstat(Number(net.online) || 0, 'Online'));
+    stats.appendChild(hstat(Number(net.total) || 0, 'Total Server'));
+    stats.appendChild(hstat((Number(net.uptime_pct) || 0) + '%', 'Uptime'));
+    identity.appendChild(stats);
+    body.appendChild(identity);
+
+    hero.appendChild(body);
+    return hero;
   }
 
   /* ---------------- status jaringan ---------------- */

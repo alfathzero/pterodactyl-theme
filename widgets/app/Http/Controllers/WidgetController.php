@@ -44,6 +44,12 @@ class WidgetController extends Controller
         [$myServers, $quota, $myServersTotal] = $this->userData((int) $user->id);
 
         return new JsonResponse([
+            'user' => [
+                'username' => (string) $user->username,
+                'root_admin' => (bool) $user->root_admin,
+                'avatar' => $user->avatar_url,
+                'joined' => optional($user->created_at)->toIso8601String(),
+            ],
             'network' => $global['network'],
             'traffic' => $this->traffic(),
             'vps' => $this->vpsStats(),
