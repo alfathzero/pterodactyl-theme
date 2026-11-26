@@ -122,6 +122,16 @@
     max-height: calc(100vh - var(--orb-lift) - 130px);
     overflow-y: auto;
   }
+
+  /* file manager: bulk action bar (Move / Archive / Delete) */
+  body.srv-nav-on .pointer-events-none.fixed.bottom-0.z-50 {
+    bottom: calc(var(--srv-nav-offset) + 8px) !important;
+  }
+
+  /* toast izin notifikasi */
+  body.srv-nav-on .dw-notif-toast {
+    bottom: calc(var(--srv-nav-offset) + 12px);
+  }
 }
 
 @media (max-width: 380px) {
