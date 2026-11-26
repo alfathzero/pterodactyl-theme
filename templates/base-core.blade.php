@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="/assets/custom-widgets.css?v=7">
     <link rel="stylesheet" href="/assets/custom-profile.css?v=1">
     <link rel="stylesheet" href="/assets/custom-glass.css?v=3">
-    <link rel="stylesheet" href="/assets/custom-server-nav.css?v=1">
 @endsection
 
 @section('container')
@@ -147,7 +146,6 @@
     @parent
     <script src="/assets/custom-stats.js?v=2"></script>
     <script src="/assets/custom-glass.js?v=2"></script>
-    <script src="/assets/custom-server-nav.js?v=1"></script>
     <script src="/assets/custom-orb.js?v=15"></script>
     <script src="/assets/custom-chat.js?v=11"></script>
     <script src="/assets/custom-leaderboard.js?v=3"></script>
