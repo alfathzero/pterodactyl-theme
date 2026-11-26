@@ -253,10 +253,10 @@
 
 /* ===== file manager rows: rapi + halus (ga mengubah layout) ===== */
 #app div:has(> a[href*="/files"]) {
+  position: relative;
   border-radius: 10px;
   margin-bottom: 4px;
-  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
-  animation: slideRight 0.35s ease backwards;
+  transition: box-shadow 0.2s ease, background 0.2s ease;
 }
 #app div:nth-child(1):has(> a[href*="/files"]) { animation-delay: 0.03s; }
 #app div:nth-child(2):has(> a[href*="/files"]) { animation-delay: 0.07s; }
@@ -265,7 +265,7 @@
 #app div:nth-child(5):has(> a[href*="/files"]) { animation-delay: 0.19s; }
 #app div:nth-child(n+6):has(> a[href*="/files"]) { animation-delay: 0.23s; }
 #app div:has(> a[href*="/files"]):hover {
-  transform: translateX(3px);
+  z-index: 60;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), 0 0 16px rgba(99, 102, 241, 0.12);
 }
 #app a[href*="/files"] { border-radius: 10px; }

@@ -5,6 +5,9 @@
 
   if (document.getElementById('gl-bg-layer')) return;
 
+  var isDash = window.location.pathname.replace(/\/+$/, '') === '';
+  var finePointer = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
   var bg = document.createElement('div');
   bg.id = 'gl-bg-layer';
   bg.className = 'gl-bg';
@@ -21,8 +24,8 @@
 
   function attach() {
     if (!document.body) return;
-    document.body.appendChild(bg);
-    document.body.appendChild(spot);
+    if (isDash) document.body.appendChild(bg);
+    if (finePointer) document.body.appendChild(spot);
   }
 
   if (document.body) attach();

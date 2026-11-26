@@ -341,10 +341,6 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.14) !important;
   outline: none !important;
 }
-button {
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-}
 
 /* ---------- modal & panel ---------- */
 .gl-modal, div[role="dialog"] {
@@ -394,4 +390,25 @@ footer, .footer {
 }
 @media (prefers-reduced-motion: reduce) {
   .gl-blob, .gl-hero, .dw-card { animation: none !important; }
+}
+
+/* ---------- hemat GPU (mobile & page berat kayak console) ---------- */
+@media (max-width: 900px) {
+  .gl-blob { animation: none !important; filter: blur(52px) !important; opacity: 0.32 !important; }
+  .gl-bg::after { display: none; }
+  .gl-spot { display: none !important; }
+  .dw-card, .gl-hero, .gl-btn, input, textarea, select, button,
+  a[href^="/server/"], div[role="dialog"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .dw-card { box-shadow: 0 8px 20px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.05) !important; }
+}
+@media (hover: none) {
+  .gl-spot { display: none !important; }
+}
+
+/* ---------- dropdown file manager: pastikan di atas baris lain ---------- */
+#app div[style*="12rem"] {
+  z-index: 120 !important;
 }
