@@ -309,3 +309,23 @@ body.brutal-dash ::-webkit-scrollbar-thumb { background: var(--br-ink); border-r
   body.brutal-dash .dw-card { box-shadow: 5px 5px 0 var(--br-ink) !important; }
   body.brutal-dash a[href^="/server/"] { box-shadow: 4px 4px 0 var(--br-ink) !important; }
 }
+
+/* ---------- fix layout & kontras (mobile) ---------- */
+body.brutal-dash .dw-card,
+body.brutal-dash .dw-card * { color: var(--br-ink) !important; }
+body.brutal-dash .dw-card .dw-head-badge { color: var(--br-ink) !important; }
+body.brutal-dash .dw-card .dw-dot { border: 0 !important; }
+body.brutal-dash .dw-card .dw-spark,
+body.brutal-dash .dw-card .dw-spark * { color: #111 !important; }
+
+body.brutal-dash .gl-hero-body .gl-identity { margin-top: 16px !important; }
+body.brutal-dash .gl-actions { flex-wrap: wrap !important; }
+body.brutal-dash .gl-name { flex-wrap: wrap; row-gap: 4px; }
+body.brutal-dash .gl-stats { width: 100% !important; }
+body.brutal-dash .gl-hstat { padding: 10px 10px !important; }
+body.brutal-dash .gl-hstat b { display: block; line-height: 1.15; }
+body.brutal-dash .gl-hstat span { display: block; margin-top: 3px; line-height: 1.2; }
+body.brutal-dash .gl-chip { white-space: nowrap; }
+body.brutal-dash .dw-chip { white-space: nowrap; }
+body.brutal-dash .dw-meta { row-gap: 6px; }
+body.brutal-dash .dw-card { overflow: hidden; }
