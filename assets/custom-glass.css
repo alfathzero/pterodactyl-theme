@@ -1,0 +1,53 @@
+/* ============================================================
+   Glassmorphism Dashboard Theme (pterodactyl-theme)
+   Inject via custom CSS / runtime injection.
+   ============================================================ */
+
+/* Global Glass Background & Overlay Effect */
+body, .bg-neutral-900, .bg-neutral-800, [class*="bg-neutral-"] {
+    background-color: #0c0f17 !important;
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(30, 58, 138, 0.25) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(88, 28, 135, 0.2) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.8) 0%, transparent 100%) !important;
+    background-attachment: fixed !important;
+}
+
+/* Glass Panels / Cards / Sidebars */
+.bg-neutral-700, .bg-neutral-800, .bg-neutral-900\/50, div[class*="bg-neutral"], section, aside, nav,
+.dw-card, .chat-box, .chat-container {
+    background: rgba(17, 24, 39, 0.55) !important;
+    backdrop-filter: blur(16px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+    border-radius: 1rem !important;
+}
+
+/* Specific overrides for tables and lists */
+table, tr, td, th {
+    background: transparent !important;
+}
+
+/* Glass Buttons & Interactive Elements */
+button, .btn, input, select, textarea {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* Inputs styling */
+input[type="text"], input[type="password"], input[type="email"], textarea, select {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #f8fafc !important;
+    border-radius: 0.75rem !important;
+}
+input:focus, textarea:focus, select:focus {
+    border-color: rgba(56, 189, 248, 0.6) !important;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.2) !important;
+}
+
+/* Glow effects for accents */
+.text-cyan-400, [class*="text-cyan"] {
+    text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+}
