@@ -1,0 +1,311 @@
+/* ============================================================
+   Neo-Brutalism dashboard skin (pterodactyl-theme)
+   Cuma aktif di halaman dashboard (body.brutal-dash).
+   Warna & bayangan keras, border tebal, tanpa blur.
+   ============================================================ */
+
+body.brutal-dash {
+  --br-cream: #f6f1e4;
+  --br-ink: #111111;
+  --br-yellow: #ffe14d;
+  --br-pink: #ff8fd1;
+  --br-blue: #7cd4ff;
+  --br-green: #b6f36b;
+  --br-white: #fffdf6;
+  background: var(--br-cream) !important;
+  color: var(--br-ink);
+  min-height: 100vh;
+}
+body.brutal-dash::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .3;
+  background-image: radial-gradient(#111 1px, transparent 1px);
+  background-size: 17px 17px;
+}
+/* matiin sisa layer glass kalau masih ke-load */
+body.brutal-dash .gl-bg,
+body.brutal-dash .gl-spot { display: none !important; }
+
+/* ---------- navbar ---------- */
+body.brutal-dash div.w-full.bg-neutral-900 {
+  background: var(--br-yellow) !important;
+  border-bottom: 3px solid var(--br-ink) !important;
+  box-shadow: 0 6px 0 rgba(17, 17, 17, .18) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+body.brutal-dash div.w-full.bg-neutral-900 #logo a {
+  background: none !important;
+  -webkit-text-fill-color: var(--br-ink);
+  color: var(--br-ink) !important;
+  font-weight: 900;
+  letter-spacing: -.02em;
+  text-transform: uppercase;
+}
+body.brutal-dash div.w-full.bg-neutral-900 a,
+body.brutal-dash div.w-full.bg-neutral-900 button,
+body.brutal-dash div.w-full.bg-neutral-900 span,
+body.brutal-dash div.w-full.bg-neutral-900 svg {
+  color: var(--br-ink) !important;
+}
+body.brutal-dash div.w-full.bg-neutral-900 .navigation-link:hover,
+body.brutal-dash div.w-full.bg-neutral-900 a:hover,
+body.brutal-dash div.w-full.bg-neutral-900 button:hover {
+  background: var(--br-pink) !important;
+  color: var(--br-ink) !important;
+  box-shadow: inset 0 -3px var(--br-ink);
+}
+
+/* ---------- hero profil ---------- */
+body.brutal-dash .gl-hero {
+  position: relative;
+  overflow: visible;
+  margin: 4px 0 20px;
+  border-radius: 16px !important;
+  border: 3px solid var(--br-ink) !important;
+  background: var(--br-blue) !important;
+  box-shadow: 7px 7px 0 var(--br-ink) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  animation: none !important;
+}
+body.brutal-dash .gl-cover { display: none !important; }
+body.brutal-dash .gl-hero-body { padding: 18px 18px 20px !important; }
+body.brutal-dash .gl-hero-top {
+  margin-top: 0 !important;
+  align-items: center !important;
+}
+body.brutal-dash .gl-avatar {
+  width: 82px !important;
+  height: 82px !important;
+  border-radius: 16px !important;
+  border: 3px solid var(--br-ink) !important;
+  background: var(--br-white) !important;
+  color: var(--br-ink) !important;
+  box-shadow: 4px 4px 0 var(--br-ink) !important;
+  font-weight: 900;
+}
+body.brutal-dash .gl-dot {
+  width: 16px !important;
+  height: 16px !important;
+  background: var(--br-green) !important;
+  border: 3px solid var(--br-ink) !important;
+  box-shadow: none !important;
+  right: -4px !important;
+  bottom: -4px !important;
+}
+body.brutal-dash .gl-actions { gap: 10px !important; }
+body.brutal-dash .gl-btn {
+  border-radius: 999px !important;
+  border: 2px solid var(--br-ink) !important;
+  background: var(--br-white) !important;
+  color: var(--br-ink) !important;
+  font-weight: 800 !important;
+  font-size: 12.5px !important;
+  padding: 8px 14px !important;
+  box-shadow: 3px 3px 0 var(--br-ink) !important;
+  transition: transform .12s, box-shadow .12s !important;
+}
+body.brutal-dash .gl-btn:hover {
+  transform: translate(-1px, -1px) !important;
+  box-shadow: 5px 5px 0 var(--br-ink) !important;
+  background: var(--br-white) !important;
+}
+body.brutal-dash .gl-btn:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 1px 1px 0 var(--br-ink) !important;
+}
+body.brutal-dash .gl-btn.gl-btn-primary {
+  background: var(--br-pink) !important;
+  color: var(--br-ink) !important;
+  border-color: var(--br-ink) !important;
+  box-shadow: 3px 3px 0 var(--br-ink) !important;
+}
+body.brutal-dash .gl-name {
+  color: var(--br-ink) !important;
+  font-weight: 900 !important;
+  text-transform: uppercase;
+  letter-spacing: -.03em !important;
+  font-size: clamp(19px, 3vw, 26px) !important;
+}
+body.brutal-dash .gl-badge-admin {
+  background: var(--br-ink) !important;
+  color: var(--br-yellow) !important;
+  border: 0 !important;
+  border-radius: 6px !important;
+  padding: 3px 8px !important;
+  font-weight: 900 !important;
+  letter-spacing: .1em !important;
+}
+body.brutal-dash .gl-handle { color: rgba(17, 17, 17, .75) !important; font-weight: 700; }
+body.brutal-dash .gl-bio { color: rgba(17, 17, 17, .82) !important; font-weight: 500; }
+body.brutal-dash .gl-chip {
+  border: 2px solid var(--br-ink) !important;
+  background: var(--br-white) !important;
+  color: var(--br-ink) !important;
+  font-weight: 800 !important;
+  border-radius: 999px !important;
+  font-size: 10.5px !important;
+  padding: 4px 9px !important;
+}
+body.brutal-dash .gl-chip.gl-chip-live { background: var(--br-green) !important; color: var(--br-ink) !important; }
+body.brutal-dash .gl-pulse {
+  width: 7px; height: 7px;
+  background: var(--br-ink) !important;
+  box-shadow: none !important;
+  animation: br-blink 1.2s steps(2) infinite !important;
+}
+@keyframes br-blink { 50% { opacity: .15; } }
+body.brutal-dash .gl-stats { gap: 10px !important; }
+body.brutal-dash .gl-hstat {
+  border: 2px solid var(--br-ink) !important;
+  border-radius: 12px !important;
+  background: var(--br-white) !important;
+  box-shadow: 3px 3px 0 var(--br-ink) !important;
+  transition: transform .12s, box-shadow .12s !important;
+}
+body.brutal-dash .gl-hstat:hover { transform: translate(-1px, -1px) !important; box-shadow: 5px 5px 0 var(--br-ink) !important; }
+body.brutal-dash .gl-hstat:nth-child(1) { background: var(--br-yellow) !important; }
+body.brutal-dash .gl-hstat:nth-child(2) { background: var(--br-pink) !important; }
+body.brutal-dash .gl-hstat:nth-child(3) { background: var(--br-green) !important; }
+body.brutal-dash .gl-hstat:nth-child(4) { background: var(--br-white) !important; }
+body.brutal-dash .gl-hstat b { color: var(--br-ink) !important; font-weight: 900 !important; }
+body.brutal-dash .gl-hstat span { color: rgba(17, 17, 17, .7) !important; font-weight: 800 !important; }
+
+/* ---------- kartu widget ---------- */
+body.brutal-dash .dw-root { color: var(--br-ink) !important; }
+body.brutal-dash .dw-card {
+  border-radius: 16px !important;
+  border: 3px solid var(--br-ink) !important;
+  background: var(--br-white) !important;
+  box-shadow: 7px 7px 0 var(--br-ink) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  min-height: 148px;
+}
+body.brutal-dash .dw-card::after { display: none !important; }
+body.brutal-dash .dw-card:nth-child(1) { background: #fff8d6 !important; }
+body.brutal-dash .dw-card:nth-child(2) { background: #ffe9f6 !important; }
+body.brutal-dash .dw-card:nth-child(3) { background: #e9ffe2 !important; }
+body.brutal-dash .dw-card:nth-child(4) { background: #e6f6ff !important; }
+body.brutal-dash .dw-card:nth-child(5) { background: #fdf0dc !important; }
+body.brutal-dash .dw-card:hover {
+  border-color: var(--br-ink) !important;
+  box-shadow: 9px 9px 0 var(--br-ink) !important;
+  transform: translate(-1px, -1px);
+}
+body.brutal-dash .dw-head-icon {
+  border-radius: 8px !important;
+  border: 2px solid var(--br-ink) !important;
+  background: var(--br-white) !important;
+  width: 28px;
+  height: 28px;
+  display: inline-grid !important;
+  place-items: center;
+}
+body.brutal-dash .dw-head-title { color: var(--br-ink) !important; font-weight: 900 !important; text-transform: uppercase; letter-spacing: .02em; }
+body.brutal-dash .dw-head-badge {
+  border: 2px solid var(--br-ink) !important;
+  background: var(--br-green) !important;
+  color: var(--br-ink) !important;
+  font-weight: 900 !important;
+  border-radius: 999px !important;
+}
+body.brutal-dash .dw-head-badge.warn { background: var(--br-yellow) !important; }
+body.brutal-dash .dw-head-badge.off { background: #ffd0d0 !important; }
+body.brutal-dash .dw-big-num { color: var(--br-ink) !important; font-weight: 900 !important; }
+body.brutal-dash .dw-big-sub { color: rgba(17, 17, 17, .7) !important; font-weight: 700; }
+body.brutal-dash .dw-chip {
+  border: 2px solid var(--br-ink) !important;
+  background: var(--br-white) !important;
+  color: var(--br-ink) !important;
+  font-weight: 800;
+  border-radius: 999px !important;
+}
+body.brutal-dash .dw-chip b { color: var(--br-ink) !important; }
+body.brutal-dash .dw-muted { color: rgba(17, 17, 17, .6) !important; font-weight: 700; }
+body.brutal-dash .dw-spark { color: #111 !important; }
+body.brutal-dash .dw-spark-svg { filter: none !important; }
+body.brutal-dash .dw-row {
+  border: 2px solid var(--br-ink) !important;
+  background: var(--br-white) !important;
+  border-radius: 10px !important;
+  box-shadow: 2px 2px 0 var(--br-ink);
+}
+body.brutal-dash .dw-row:hover { background: var(--br-green) !important; border-color: var(--br-ink) !important; }
+body.brutal-dash .dw-row-name { color: var(--br-ink) !important; font-weight: 800; }
+body.brutal-dash .dw-row-sub { color: rgba(17, 17, 17, .65) !important; }
+body.brutal-dash .dw-dot.on { background: #2fbe5a; box-shadow: 0 0 0 3px rgba(47, 190, 90, .2); }
+body.brutal-dash .dw-dot.sus { background: #e0a400; }
+body.brutal-dash .dw-empty { color: rgba(17, 17, 17, .6) !important; font-weight: 700; }
+
+/* ---------- server rows ---------- */
+body.brutal-dash a[href^="/server/"] {
+  border-radius: 12px !important;
+  border: 3px solid var(--br-ink) !important;
+  background: var(--br-white) !important;
+  box-shadow: 5px 5px 0 var(--br-ink) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  margin-bottom: 12px !important;
+  transition: transform .12s, box-shadow .12s !important;
+}
+body.brutal-dash a[href^="/server/"]:hover {
+  transform: translate(-1px, -1px) !important;
+  box-shadow: 7px 7px 0 var(--br-ink) !important;
+  border-color: var(--br-ink) !important;
+}
+body.brutal-dash a[href^="/server/"] * { color: var(--br-ink) !important; }
+body.brutal-dash a[href^="/server/"] .icon {
+  background: var(--br-yellow) !important;
+  border: 2px solid var(--br-ink) !important;
+  border-radius: 12px !important;
+}
+body.brutal-dash a[href^="/server/"] .status-bar { border-radius: 99px !important; }
+body.brutal-dash a[href^="/server/"] svg { color: var(--br-ink) !important; }
+
+/* ---------- form / tombol ---------- */
+body.brutal-dash input:not([type="checkbox"]):not([type="radio"]),
+body.brutal-dash textarea,
+body.brutal-dash select {
+  background: var(--br-white) !important;
+  border: 2px solid var(--br-ink) !important;
+  border-radius: 10px !important;
+  color: var(--br-ink) !important;
+  box-shadow: 2px 2px 0 var(--br-ink);
+}
+body.brutal-dash input:focus,
+body.brutal-dash textarea:focus,
+body.brutal-dash select:focus {
+  outline: 2px solid var(--br-pink) !important;
+  outline-offset: 2px;
+  box-shadow: 2px 2px 0 var(--br-ink) !important;
+}
+body.brutal-dash button { -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* ---------- text umum dashboard (React server list) ---------- */
+body.brutal-dash #app { color: var(--br-ink); }
+body.brutal-dash #app > div > div > p,
+body.brutal-dash #app p { color: inherit; }
+
+/* footer */
+body.brutal-dash footer,
+body.brutal-dash .footer { color: rgba(17, 17, 17, .5) !important; border-color: rgba(17, 17, 17, .15) !important; }
+
+/* scrollbar */
+body.brutal-dash ::-webkit-scrollbar { width: 10px; height: 10px; }
+body.brutal-dash ::-webkit-scrollbar-track { background: #efe9da; }
+body.brutal-dash ::-webkit-scrollbar-thumb { background: var(--br-ink); border-radius: 0; }
+
+@media (max-width: 720px) {
+  body.brutal-dash .gl-hero { box-shadow: 5px 5px 0 var(--br-ink) !important; }
+  body.brutal-dash .dw-card { box-shadow: 5px 5px 0 var(--br-ink) !important; }
+  body.brutal-dash a[href^="/server/"] { box-shadow: 4px 4px 0 var(--br-ink) !important; }
+}
