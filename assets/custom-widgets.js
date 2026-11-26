@@ -16,7 +16,6 @@
     lastFetch: 0,
     observer: null,
     pending: null,
-    lastOnline: null,
     announcement: null,
     swPromise: null,
     swReg: null,
@@ -805,7 +804,6 @@
     if (data.user) root.appendChild(heroCard(data.user, data));
 
     var grid = el('div', 'dw-grid');
-    grid.appendChild(networkCard(data.network || {}));
     grid.appendChild(myServersCard(data.my_servers || [], Number(data.my_servers_total) || (data.my_servers || []).length));
     grid.appendChild(quotaCard(data.quota || {}));
     grid.appendChild(trafficCard(data.traffic || {}));
@@ -905,36 +903,7 @@
     return hero;
   }
 
-  /* ---------------- status jaringan ---------------- */
-
-  function networkCard(n) {
-    var online = Number(n.online) || 0;
-    var total = Number(n.total) || 0;
-    var cardNode = card('🌐', 'Status Jaringan',
-      (Number(n.uptime_pct) || 0) + '%', Number(n.uptime_pct) >= 60 ? '' : 'warn');
-
-    var big = el('div', 'dw-big');
-    var num = el('span', 'dw-big-num', String(online));
-    big.appendChild(num);
-    big.appendChild(el('span', 'dw-big-sub', ' / ' + total + ' server online'));
-    cardNode.appendChild(big);
-
-    var meta = el('div', 'dw-meta');
-    meta.appendChild(chip('Offline', n.offline));
-    meta.appendChild(chip('Node', n.nodes));
-    meta.appendChild(chip('Uptime', (Number(n.uptime_pct) || 0) + '%'));
-    cardNode.appendChild(meta);
-
-    cardNode.appendChild(sparkline(n.history || []));
-    if (state.lastOnline === online) {
-      num.textContent = String(online);
-    } else {
-      countUp(num, online);
-      state.lastOnline = online;
-    }
-    return cardNode;
-  }
-
+  /* ---------------- chip ---------------- */
   function chip(label, value) {
     var node = el('span', 'dw-chip');
     node.appendChild(document.createTextNode(label + ' '));
@@ -1020,23 +989,7 @@
     return wrap;
   }
 
-  function countUp(node, target) {
-    if (!window.requestAnimationFrame || target <= 0) return;
-    var start = null;
-    var duration = 550;
-    function step(ts) {
-      if (!start) start = ts;
-      var progress = Math.min(1, (ts - start) / duration);
-      var eased = 1 - Math.pow(1 - progress, 3);
-      node.textContent = String(Math.round(target * eased));
-      if (progress < 1 && node.isConnected !== false) {
-        window.requestAnimationFrame(step);
-      } else {
-        node.textContent = String(target);
-      }
-    }
-    window.requestAnimationFrame(step);
-  }
+
 
   /* ---------------- server saya ---------------- */
 
