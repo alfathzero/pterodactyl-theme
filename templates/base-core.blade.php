@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/assets/custom-widgets.css?v=7">
     <link rel="stylesheet" href="/assets/custom-profile.css?v=1">
     <link rel="stylesheet" href="/assets/custom-glass.css?v=3">
-    <link rel="stylesheet" href="/assets/custom-server-nav.css?v=2">
+    <link rel="stylesheet" href="/assets/custom-server-nav.css?v=1">
 @endsection
 
 @section('container')
